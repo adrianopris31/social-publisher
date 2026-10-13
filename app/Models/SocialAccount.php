@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['platform', 'external_id', 'display_name', 'scopes', 'avatar_url', 'access_token', 'refresh_token', 'token_expires_at'])]
 #[Hidden(['access_token', 'refresh_token'])]
@@ -39,5 +40,13 @@ class SocialAccount extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasMany<Publication, $this>
+     */
+    public function publications(): HasMany
+    {
+        return $this->hasMany(Publication::class);
     }
 }
