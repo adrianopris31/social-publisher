@@ -1,0 +1,34 @@
+# Progress
+
+Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
+
+## Current phase & task
+Phase 0 – Tooling. Next up: commit Phase 0 setup, then FFmpeg + finish Phase 0.
+
+## Done
+- 2026-10-13: Setup audit; docs + `CLAUDE.md` imports. Git on `main` (initial commit). Site linked as `social-publisher.test`, isolated to PHP 8.5, `composer.json` php `^8.5`; 40 tests pass on 8.5. Lock synced; `~/.zshrc` puts Herd PHP/Composer first.
+- 2026-10-13: MySQL 9 (`social_publisher` DB, utf8mb4, least-privilege app user), migrated. Redis via Homebrew; queue + cache on redis. `.env.example` updated.
+
+## In progress
+- Nothing.
+
+## Next
+1. Commit `composer.json`, `composer.lock`, `.env.example`, `docs/`.
+2. Install FFmpeg/ffprobe (needed in Phase 2).
+
+## Decisions
+- 2026-10-13: Free Herd → MySQL from the official installer, Redis from Homebrew. Horizon deferred to Phase 4.
+- 2026-10-13: Stack and architecture as in `docs/PROJECT.md` (R2 + presigned uploads, one job per platform publish, `PublisherInterface`).
+
+## Blockers / open questions
+- FFmpeg not installed.
+- XAMPP and Homebrew `mysql`/`mariadb` are also installed (stopped) → keep them stopped to avoid port 3306 clashes.
+- MySQL root password was echoed into a Claude session log → consider rotating it.
+
+## Platform approvals
+| Platform | Status | Notes |
+|---|---|---|
+| YouTube (Google OAuth) | not started | `youtube.upload` sensitive scope; audit for public uploads |
+| Instagram (Meta) | not started | App Review + Business Verification for public use |
+| Facebook Pages (Meta) | not started | Same Meta app as Instagram |
+| TikTok | not started | Draft/inbox pre-audit; audit for direct post |
