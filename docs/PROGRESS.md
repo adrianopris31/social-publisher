@@ -3,19 +3,18 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. `r2` disk works (round-trip verified); next: bucket CORS.
+Phase 2 – Upload pipeline. `r2` disk works (round-trip verified); owner is adding the bucket CORS policy in the Cloudflare dashboard.
 
 ## Done
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Nothing.
+- Bucket CORS (R2 → `social-publisher-local` → Settings → CORS Policy): origins `http(s)://social-publisher.test`, methods `PUT`, allowed header `Content-Type`, expose `ETag`, max age 3600. When saved, Claude verifies with a preflight (`OPTIONS`) against a real presigned PUT URL.
 
 ## Next
-1. Phase 2: bucket CORS for browser PUT uploads from `http://social-publisher.test`.
-2. Phase 2: presigned upload endpoint + React uploader with progress.
-3. Phase 2: ffprobe validation job (9:16, duration, size, codec); storage file cleanup on delete.
+1. Phase 2: presigned upload endpoint + React uploader with progress.
+2. Phase 2: ffprobe validation job (9:16, duration, size, codec); storage file cleanup on delete.
 
 ## Decisions
 - 2026-10-13: Free Herd → MySQL from the official installer, Redis from Homebrew. Horizon deferred to Phase 4.
@@ -23,7 +22,7 @@ Phase 2 – Upload pipeline. `r2` disk works (round-trip verified); next: bucket
 - 2026-10-13: FKs: deleting a video cascades its posts (restrict would break user-delete cascades); deleting a SocialAccount nulls `publications.social_account_id`, `platform` is snapshotted on Publication to keep history. Unique (post, account).
 - 2026-10-13: `config/boost.php` sends Claude Code guidelines to `AGENTS.md`, so `boost:update` keeps `CLAUDE.md` imports-only.
 - 2026-10-13: Tokens in encrypted columns on `social_accounts` (no token package yet; revisit in Phase 3). `composer types:check` uses `--memory-limit=1G`.
-- 2026-10-13: Storage: dedicated `r2` disk (`R2_*` env, `throw => true`); bucket `social-publisher-local` is private. Tests use `Storage::fake('r2')`.
+- 2026-10-13: Storage: dedicated `r2` disk (`R2_*` env, `throw => true`); bucket `social-publisher-local` is private. Tests use `Storage::fake('r2')`. R2 (not local disk) because files must outlive scheduling/retries, be shared by web + queue workers, and be pullable by IG/TikTok via temporary URLs; delete files once all publications finish.
 - 2026-10-13: Git: conventional commits, commit straight to `main` while solo.
 - 2026-10-13: Stack and architecture as in `docs/PROJECT.md` (R2 + presigned uploads, one job per platform publish, `PublisherInterface`).
 
