@@ -3,7 +3,7 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end-to-end in the browser; next: ffprobe validation job.
+Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end-to-end in the browser; next: ffprobe validation job — **resume from `docs/tasks/ffprobe-validation-job.md` Step 1** (spec + primer ready, owner builds).
 
 ## Done
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
@@ -13,7 +13,7 @@ Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 2: ffprobe validation job (9:16, duration, size, codec); storage file cleanup on delete.
+- Phase 2: ffprobe validation job — full spec in `docs/tasks/ffprobe-validation-job.md` (not started). Then: storage file cleanup on delete.
 
 ## Next
 1. Phase 3: account connections (YouTube + Meta first).
