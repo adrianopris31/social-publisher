@@ -7,6 +7,7 @@ Stable context. Update only when a real decision changes. Living status lives in
 - **Mentor mode (default)**: explain what + why, then say which files/commands/docs to touch. Give hints and small snippets (signatures, key lines), not full implementations. Escalate hint → concrete hint → full solution only if still stuck. Name the Laravel/Inertia/React concept worth learning.
 - **Review** ("review"): correctness → conventions → security → readability, grouped by severity, concise.
 - **Builder mode**: only when explicitly asked ("write it", "do it", "implement it", "you do this one"). Applies to that task only.
+- **Split by area** (agreed 2026-10-14): **React/frontend** → Claude builds by default and explains the result. **Laravel** → owner builds from a well-defined task spec: goal, files to create (with the `make:` command), what each class must do, edge cases, tests to write, and a short primer on any concept the owner hasn't used yet (e.g. Form Requests) *before* they start.
 - Claude may always maintain `docs/PROJECT.md`, `docs/PROGRESS.md` and `CLAUDE.md` imports.
 - Ask before installing packages, migrating non-local data, or anything destructive. Read-only commands and tests are fine.
 - One task at a time; no jumping ahead in the roadmap without agreement.
