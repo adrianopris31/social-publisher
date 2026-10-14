@@ -3,19 +3,20 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload backend done (presigned URL + confirm); next: React uploader.
+Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end-to-end in the browser; next: ffprobe validation job.
 
 ## Done
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
+- 2026-10-14: Uploader page `videos/create`: `useHttp` for presign + confirm, raw XHR PUT to R2 with progress (no app headers cross-origin). Verified in browser.
 - 2026-10-14: Upload backend: `POST videos/uploads` (presigned PUT, server-built key `videos/{user}/{uuid}.{ext}`) + `POST videos` (anchored key regex, unique path, size/mime read from R2, >500 MB deleted). Too-large branch untested.
 - 2026-10-14: R2 bucket CORS verified: preflight on a presigned PUT → 204 for `http(s)://social-publisher.test`, 403 for other origins. ETag exposure to confirm on first real browser upload.
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 2: React uploader with progress (`useHttp` → PUT to R2 → `videos.store`).
+- Phase 2: ffprobe validation job (9:16, duration, size, codec); storage file cleanup on delete.
 
 ## Next
-1. Phase 2: ffprobe validation job (9:16, duration, size, codec); storage file cleanup on delete.
+1. Phase 3: account connections (YouTube + Meta first).
 
 ## Decisions
 - 2026-10-13: Free Herd → MySQL from the official installer, Redis from Homebrew. Horizon deferred to Phase 4.
@@ -28,6 +29,8 @@ Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload backend done (
 - 2026-10-13: Stack and architecture as in `docs/PROJECT.md` (R2 + presigned uploads, one job per platform publish, `PublisherInterface`).
 
 ## Blockers / open questions
+- `npm run types:check`: 3 pre-existing errors in generated `RedirectController.ts` (Wayfinder vs `query` method from `Route::redirect` in `settings.php`).
+- Run `wayfinder:generate --with-form` (Vite uses `formVariants: true`), never without the flag.
 - Deleting a user/video cascades DB rows but not files in storage → handle file cleanup in Phase 2.
 - XAMPP and Homebrew `mysql`/`mariadb` are also installed (stopped) → keep them stopped to avoid port 3306 clashes.
 - MySQL root password was echoed into a Claude session log → consider rotating it.
