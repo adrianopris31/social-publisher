@@ -9,6 +9,8 @@ Route::inertia('/', 'welcome')->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
+    Route::inertia('videos/create', 'videos/create')->name('videos.create');
+
     Route::post('videos/uploads', [VideoUploadController::class, 'store'])->name('videos.uploads.store');
 
     Route::post('videos', [VideoController::class, 'store'])->name('videos.store');
