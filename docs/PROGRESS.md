@@ -3,9 +3,10 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end-to-end in the browser; next: ffprobe validation job — **resume from `docs/tasks/ffprobe-validation-job.md` Step 1** (spec + primer ready, owner builds).
+Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 of `docs/tasks/ffprobe-validation-job.md`); full suite green, committed. **Next: owner's manual check with `queue:work`** (upload while worker is stopped → `Pending`, start worker → `Ready`/`Rejected`), then `failed()` handler.
 
 ## Done
+- 2026-10-15: `ProbeVideo` job: `VideoStatus` enum (Pending/Ready/Rejected) + `status`/`rejection_reason` columns, dispatched from `VideoController@store`; ffprobe via `Process` on an R2 `temporaryUrl`, rotation swap, codec/vertical/ratio 0.45–0.6/3–180 s rules, rejected files deleted. Tests fake ffprobe with `Process::fake(['*ffprobe*' => ...])` (array commands are quoted, `'ffprobe *'` doesn't match). Controller tests need `Queue::fake([ProbeVideo::class])` (test queue is `sync`).
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
 - 2026-10-14: Uploader page `videos/create`: `useHttp` for presign + confirm, raw XHR PUT to R2 with progress (no app headers cross-origin). Verified in browser.
 - 2026-10-14: Upload backend: `POST videos/uploads` (presigned PUT, server-built key `videos/{user}/{uuid}.{ext}`) + `POST videos` (anchored key regex, unique path, size/mime read from R2, >500 MB deleted). Too-large branch untested.
@@ -13,7 +14,7 @@ Phase 2 – Upload pipeline. `r2` disk + bucket CORS done; upload flow works end
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 2: ffprobe validation job — full spec in `docs/tasks/ffprobe-validation-job.md` (not started). Then: storage file cleanup on delete.
+- Phase 2: ffprobe job — open: `failed()` handler so a video isn't stuck `Pending` after retries run out. Then: storage file cleanup on delete.
 
 ## Next
 1. Phase 3: account connections (YouTube + Meta first).

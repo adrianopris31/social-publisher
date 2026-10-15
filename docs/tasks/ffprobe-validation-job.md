@@ -1,6 +1,6 @@
 # Task: ffprobe validation job (Phase 2)
 
-Status: **not started** — owner builds it (Laravel task). Spec agreed 2026-10-14. Resume from Step 1.
+Status: **Steps 1–6 done (2026-10-15)**; remaining: full suite + manual `queue:work` check.
 Explain in Romanian when presenting it; give the primer first.
 
 ## Primer: Jobs and queues (new concept for the owner)
@@ -66,7 +66,7 @@ In `VideoController@store`, after `create()`: `ProbeVideo::dispatch($newVideo);`
 
 ## Step 6 — Tests
 **A. Job** — `tests/Feature/Jobs/ProbeVideoTest.php`, run directly: `(new ProbeVideo($video))->handle();`
-Fake ffprobe: `Process::fake(['ffprobe *' => Process::result(output: json_encode([...]))]);`
+Fake ffprobe: `Process::fake(['*ffprobe*' => Process::result(output: json_encode([...]))]);`
 - valid vertical (1080×1920, h264, 30 s) → `Ready`, metadata saved;
 - rotated 1920×1080 + `rotation: -90` → `Ready`, width 1080 / height 1920;
 - horizontal 1920×1080, no rotation → `Rejected` + reason + file deleted (`Storage::fake('r2')`, `put()` first, then `assertMissing($path)`);
