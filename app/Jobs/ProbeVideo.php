@@ -6,9 +6,17 @@ use App\Enums\VideoStatus;
 use App\Models\Video;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\Backoff;
+use Illuminate\Queue\Attributes\DeleteWhenMissingModels;
+use Illuminate\Queue\Attributes\Tries;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+use Throwable;
 
+#[Tries(3)]
+#[Backoff([10, 60])]
+#[DeleteWhenMissingModels]
 class ProbeVideo implements ShouldQueue
 {
     use Queueable;
@@ -47,9 +55,7 @@ class ProbeVideo implements ShouldQueue
         ]);
 
         if (! $result->successful()) {
-            $this->reject('Unreadable video file.');
-
-            return;
+            throw new RuntimeException('ffprobe failed: '.$result->errorOutput());
         }
 
         $probe = json_decode($result->output(), true);
@@ -81,6 +87,17 @@ class ProbeVideo implements ShouldQueue
         $this->video->update([
             'status' => VideoStatus::Ready,
             'rejection_reason' => null,
+        ]);
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        $this->video->update([
+            'status' => VideoStatus::Rejected,
+            'rejection_reason' => 'We could not process this video. Please upload it again.',
         ]);
     }
 

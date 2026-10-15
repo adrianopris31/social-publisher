@@ -83,16 +83,26 @@ test('it rejects an invalid video and deletes its file', function (string $outpu
     'too long' => [ffprobeOutput('h264', 1080, 1920, '180.001000'), 'Duration must be between 3 and 180 seconds.'],
 ]);
 
-test('it rejects a file that ffprobe cannot read and deletes it', function () {
+test('it throws when ffprobe fails so the job is retried', function () {
     Storage::fake('r2');
     Process::preventStrayProcesses();
     Process::fake(['*ffprobe*' => Process::result(exitCode: 1)]);
     $video = storedUnprocessedVideo();
 
-    (new ProbeVideo($video))->handle();
+    expect(fn () => (new ProbeVideo($video))->handle())->toThrow(RuntimeException::class);
+
+    expect($video->fresh()->status)->toBe(VideoStatus::Pending);
+    Storage::disk('r2')->assertExists($video->path);
+});
+
+test('it rejects the video without deleting its file when the job fails for good', function () {
+    Storage::fake('r2');
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->failed(new RuntimeException('R2 is down.'));
 
     expect($video->fresh())
         ->status->toBe(VideoStatus::Rejected)
-        ->rejection_reason->toBe('Unreadable video file.');
-    Storage::disk('r2')->assertMissing($video->path);
+        ->rejection_reason->toBe('We could not process this video. Please upload it again.');
+    Storage::disk('r2')->assertExists($video->path);
 });
