@@ -3,10 +3,15 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 of `docs/tasks/ffprobe-validation-job.md`); done (committed, manual `queue:work` check OK). Retries + `failed()` and storage file cleanup done, uncommitted. **Next: commit, then Phase 3.**
+Phase 3 – Account connections, YouTube first. **Step 1 (setup) waiting on owner:**
+- (a) approve installing `laravel/socialite` (Google driver built in).
+- (b) Google Cloud Console: new project, enable YouTube Data API v3, OAuth consent screen External + Testing + owner as test user, Web OAuth client; Client ID/Secret into `.env` only.
+- (c) HTTPS callback URL: Google rejects `.test` → stable `herd share` subdomain; owner to confirm whether one exists.
+Then Claude verifies scopes/offline-access params in Google docs and writes the Step 2 spec (redirect/callback, fetch channel, save `SocialAccount`).
+Phase 3 plan: 1 setup · 2 YouTube OAuth flow (owner) · 3 connected-accounts page (Claude, React) · 4 token refresh (owner) · 5 Meta.
 
 ## Done
-- 2026-10-15: File cleanup: `Video` `deleted` event deletes its file; `User` `deleting` event deletes `videos/{id}/` (DB cascade skips model events); `Video` is `Prunable` (Rejected > 7 days), `model:prune` scheduled daily. `TestCase::setUp` fakes `r2` globally so tests never hit the real bucket.
+- 2026-10-15: Phase 2 done. File cleanup: `Video` `deleted` event deletes its file; `User` `deleting` event deletes `videos/{id}/` (DB cascade skips model events); `Video` is `Prunable` (Rejected > 7 days), `model:prune` scheduled daily. `TestCase::setUp` fakes `r2` globally so tests never hit the real bucket.
 - 2026-10-15: `ProbeVideo` job: `VideoStatus` enum (Pending/Ready/Rejected) + `status`/`rejection_reason` columns, dispatched from `VideoController@store`; ffprobe via `Process` on an R2 `temporaryUrl`, rotation swap, codec/vertical/ratio 0.45–0.6/3–180 s rules, rejected files deleted. Tests fake ffprobe with `Process::fake(['*ffprobe*' => ...])` (array commands are quoted, `'ffprobe *'` doesn't match). Controller tests need `Queue::fake([ProbeVideo::class])` (test queue is `sync`). ffprobe failure throws → `#[Tries(3)]`/`#[Backoff([10, 60])]` → `failed()` marks Rejected (generic reason, file kept); `#[DeleteWhenMissingModels]`.
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
 - 2026-10-14: Uploader page `videos/create`: `useHttp` for presign + confirm, raw XHR PUT to R2 with progress (no app headers cross-origin). Verified in browser.
@@ -15,10 +20,10 @@ Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Nothing; Phase 2 wraps up with this commit.
+- Phase 3 Step 1 (see above).
 
 ## Next
-1. Phase 3: account connections (YouTube + Meta first).
+1. Phase 3 Step 2: YouTube OAuth flow.
 
 ## Decisions
 - 2026-10-13: Free Herd → MySQL from the official installer, Redis from Homebrew. Horizon deferred to Phase 4.
@@ -31,6 +36,7 @@ Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 
 - 2026-10-13: Stack and architecture as in `docs/PROJECT.md` (R2 + presigned uploads, one job per platform publish, `PublisherInterface`).
 
 ## Blockers / open questions
+- Google Testing mode: refresh tokens expire after 7 days; unaudited uploads are private-only.
 - `npm run types:check`: 3 pre-existing errors in generated `RedirectController.ts` (Wayfinder vs `query` method from `Route::redirect` in `settings.php`).
 - Run `wayfinder:generate --with-form` (Vite uses `formVariants: true`), never without the flag.
 - Presigned uploads never confirmed (no `Video` row) stay in R2 until the user is deleted → consider an R2 lifecycle rule.
