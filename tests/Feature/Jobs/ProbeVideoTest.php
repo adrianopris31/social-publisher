@@ -1,0 +1,98 @@
+<?php
+
+use App\Enums\VideoStatus;
+use App\Jobs\ProbeVideo;
+use App\Models\Video;
+use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
+
+/**
+ * Build the JSON that ffprobe prints for the entries the job requests.
+ */
+function ffprobeOutput(string $codec, int $width, int $height, string $duration, ?int $rotation = null): string
+{
+    $stream = ['codec_name' => $codec, 'width' => $width, 'height' => $height];
+
+    if ($rotation !== null) {
+        $stream['side_data_list'] = [['rotation' => $rotation]];
+    }
+
+    return json_encode(['streams' => [$stream], 'format' => ['duration' => $duration]], JSON_THROW_ON_ERROR);
+}
+
+/**
+ * Create an unprocessed video whose file exists on the fake r2 disk.
+ */
+function storedUnprocessedVideo(): Video
+{
+    $video = Video::factory()->unprocessed()->create(['disk' => 'r2']);
+    Storage::disk('r2')->put($video->path, 'fake video bytes');
+
+    return $video;
+}
+
+test('it marks a vertical h264 video as ready and stores its metadata', function () {
+    Storage::fake('r2');
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: ffprobeOutput('h264', 1080, 1920, '30.000000'))]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Ready)
+        ->rejection_reason->toBeNull()
+        ->width->toBe(1080)
+        ->height->toBe(1920)
+        ->duration_ms->toBe(30_000);
+    Storage::disk('r2')->assertExists($video->path);
+});
+
+test('it swaps the dimensions of a video rotated by 90 degrees', function () {
+    Storage::fake('r2');
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: ffprobeOutput('hevc', 1920, 1080, '12.500000', rotation: -90))]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Ready)
+        ->width->toBe(1080)
+        ->height->toBe(1920)
+        ->duration_ms->toBe(12_500);
+});
+
+test('it rejects an invalid video and deletes its file', function (string $output, string $reason) {
+    Storage::fake('r2');
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: $output)]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Rejected)
+        ->rejection_reason->toBe($reason);
+    Storage::disk('r2')->assertMissing($video->path);
+})->with([
+    'unsupported codec' => [ffprobeOutput('vp9', 1080, 1920, '30.000000'), 'Unsupported codec: vp9.'],
+    'horizontal' => [ffprobeOutput('h264', 1920, 1080, '30.000000'), 'Video must be vertical.'],
+    'too narrow for 9:16' => [ffprobeOutput('h264', 600, 1920, '30.000000'), 'Aspect ratio must be close to 9:16.'],
+    'too short' => [ffprobeOutput('h264', 1080, 1920, '2.999000'), 'Duration must be between 3 and 180 seconds.'],
+    'too long' => [ffprobeOutput('h264', 1080, 1920, '180.001000'), 'Duration must be between 3 and 180 seconds.'],
+]);
+
+test('it rejects a file that ffprobe cannot read and deletes it', function () {
+    Storage::fake('r2');
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(exitCode: 1)]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Rejected)
+        ->rejection_reason->toBe('Unreadable video file.');
+    Storage::disk('r2')->assertMissing($video->path);
+});

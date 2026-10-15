@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreVideoRequest;
 use App\Http\Requests\StoreVideoUploadRequest;
+use App\Jobs\ProbeVideo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +38,8 @@ class VideoController extends Controller
             'size_bytes' => $size,
             'original_filename' => $request->filename,
         ]);
+
+        ProbeVideo::dispatch($newVideo);
 
         return response()->json(['video_id' => $newVideo->id, 'message' => 'Video uploaded successfully.'], 201);
     }

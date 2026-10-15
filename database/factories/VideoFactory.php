@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\VideoStatus;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -28,6 +29,8 @@ class VideoFactory extends Factory
             'duration_ms' => fake()->numberBetween(5_000, 90_000),
             'width' => 1080,
             'height' => 1920,
+            'status' => VideoStatus::Ready,
+            'rejection_reason' => null,
         ];
     }
 
@@ -40,6 +43,7 @@ class VideoFactory extends Factory
             'duration_ms' => null,
             'width' => null,
             'height' => null,
+            'status' => VideoStatus::Pending,
         ]);
     }
 }

@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\VideoStatus;
+use App\Jobs\ProbeVideo;
 use App\Models\User;
 use App\Models\Video;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -12,8 +15,9 @@ test('guests get 401 when confirming an upload', function () {
     ])->assertUnauthorized();
 });
 
-test('it creates a video from the object stored in r2', function () {
+test('it creates a pending video from the object stored in r2 and queues its probe', function () {
     Storage::fake('r2');
+    Queue::fake([ProbeVideo::class]);
     $user = User::factory()->create();
     $key = "videos/{$user->id}/".Str::uuid().'.mp4';
     Storage::disk('r2')->put($key, 'fake video bytes');
@@ -34,7 +38,9 @@ test('it creates a video from the object stored in r2', function () {
         ->path->toBe($key)
         ->original_filename->toBe('my clip.mp4')
         ->size_bytes->toBe(strlen('fake video bytes'))
-        ->mime_type->toBe(Storage::disk('r2')->mimeType($key));
+        ->mime_type->toBe(Storage::disk('r2')->mimeType($key))
+        ->status->toBe(VideoStatus::Pending);
+    Queue::assertPushed(ProbeVideo::class, fn (ProbeVideo $job) => $job->video->is($video));
 });
 
 test('it rejects a key outside the user prefix', function (Closure $makeKey) {
@@ -73,6 +79,7 @@ test('it rejects a key whose file was never uploaded', function () {
 
 test('it rejects confirming the same key twice', function () {
     Storage::fake('r2');
+    Queue::fake([ProbeVideo::class]);
     $user = User::factory()->create();
     $key = "videos/{$user->id}/".Str::uuid().'.mp4';
     Storage::disk('r2')->put($key, 'fake video bytes');
