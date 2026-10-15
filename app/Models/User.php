@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -71,5 +72,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Delete all of the user's stored video files before the user row is removed.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (User $user) {
+            Storage::disk('r2')->deleteDirectory("videos/{$user->id}/");
+        });
     }
 }

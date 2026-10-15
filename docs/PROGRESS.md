@@ -3,10 +3,11 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 of `docs/tasks/ffprobe-validation-job.md`); full suite green, committed. **Next: owner's manual check with `queue:work`** (upload while worker is stopped → `Pending`, start worker → `Ready`/`Rejected`), then `failed()` handler.
+Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 of `docs/tasks/ffprobe-validation-job.md`); done (committed, manual `queue:work` check OK). Retries + `failed()` and storage file cleanup done, uncommitted. **Next: commit, then Phase 3.**
 
 ## Done
-- 2026-10-15: `ProbeVideo` job: `VideoStatus` enum (Pending/Ready/Rejected) + `status`/`rejection_reason` columns, dispatched from `VideoController@store`; ffprobe via `Process` on an R2 `temporaryUrl`, rotation swap, codec/vertical/ratio 0.45–0.6/3–180 s rules, rejected files deleted. Tests fake ffprobe with `Process::fake(['*ffprobe*' => ...])` (array commands are quoted, `'ffprobe *'` doesn't match). Controller tests need `Queue::fake([ProbeVideo::class])` (test queue is `sync`).
+- 2026-10-15: File cleanup: `Video` `deleted` event deletes its file; `User` `deleting` event deletes `videos/{id}/` (DB cascade skips model events); `Video` is `Prunable` (Rejected > 7 days), `model:prune` scheduled daily. `TestCase::setUp` fakes `r2` globally so tests never hit the real bucket.
+- 2026-10-15: `ProbeVideo` job: `VideoStatus` enum (Pending/Ready/Rejected) + `status`/`rejection_reason` columns, dispatched from `VideoController@store`; ffprobe via `Process` on an R2 `temporaryUrl`, rotation swap, codec/vertical/ratio 0.45–0.6/3–180 s rules, rejected files deleted. Tests fake ffprobe with `Process::fake(['*ffprobe*' => ...])` (array commands are quoted, `'ffprobe *'` doesn't match). Controller tests need `Queue::fake([ProbeVideo::class])` (test queue is `sync`). ffprobe failure throws → `#[Tries(3)]`/`#[Backoff([10, 60])]` → `failed()` marks Rejected (generic reason, file kept); `#[DeleteWhenMissingModels]`.
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
 - 2026-10-14: Uploader page `videos/create`: `useHttp` for presign + confirm, raw XHR PUT to R2 with progress (no app headers cross-origin). Verified in browser.
 - 2026-10-14: Upload backend: `POST videos/uploads` (presigned PUT, server-built key `videos/{user}/{uuid}.{ext}`) + `POST videos` (anchored key regex, unique path, size/mime read from R2, >500 MB deleted). Too-large branch untested.
@@ -14,7 +15,7 @@ Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 2: ffprobe job — open: `failed()` handler so a video isn't stuck `Pending` after retries run out. Then: storage file cleanup on delete.
+- Nothing; Phase 2 wraps up with this commit.
 
 ## Next
 1. Phase 3: account connections (YouTube + Meta first).
@@ -32,7 +33,7 @@ Phase 2 – Upload pipeline. ffprobe validation job built + tested (Steps 1–6 
 ## Blockers / open questions
 - `npm run types:check`: 3 pre-existing errors in generated `RedirectController.ts` (Wayfinder vs `query` method from `Route::redirect` in `settings.php`).
 - Run `wayfinder:generate --with-form` (Vite uses `formVariants: true`), never without the flag.
-- Deleting a user/video cascades DB rows but not files in storage → handle file cleanup in Phase 2.
+- Presigned uploads never confirmed (no `Video` row) stay in R2 until the user is deleted → consider an R2 lifecycle rule.
 - XAMPP and Homebrew `mysql`/`mariadb` are also installed (stopped) → keep them stopped to avoid port 3306 clashes.
 - MySQL root password was echoed into a Claude session log → consider rotating it.
 
