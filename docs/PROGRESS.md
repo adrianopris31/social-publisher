@@ -3,7 +3,7 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 3 – Account connections. Steps 1–4 done (setup, YouTube OAuth, connected-accounts page, token refresh). **Next: Step 5 Meta (Instagram + Facebook)**.
+Phase 3 – Account connections. Steps 1–4 done (setup, YouTube OAuth, connected-accounts page, token refresh). **Next: Step 5 TikTok** (setup waiting on owner: approve `socialiteproviders/tiktok`, developer app + sandbox), then Step 6 Meta.
 Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https://social-publisher.test --host-header=social-publisher.test`; `GOOGLE_REDIRECT_URI` points there. `vite.config.ts` allows `*.ngrok-free.(app|dev)` in `server.cors` (replaces the plugin defaults, so localhost/`.test` are re-listed) → the dev server works through ngrok.
 
 ## Done
@@ -18,13 +18,15 @@ Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https:/
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 3 Step 5 (Meta) not started; needs a Meta app + Instagram professional account.
+- Phase 3 Step 5 TikTok: setup (developer app, Login Kit + Content Posting, sandbox target user, redirect `/auth/tiktok/callback` on ngrok).
 
 ## Next
-1. Phase 3 Step 5: Meta app setup, Instagram + Facebook Page connection.
-2. Disconnect should also revoke the Google token (`oauth2.googleapis.com/revoke`).
+1. Phase 3 Step 5: TikTok connection (same shape as YouTube; token 24 h, refresh token rotates, valid 365 days).
+2. Phase 3 Step 6: Meta app setup, Instagram + Facebook Page connection.
+3. Disconnect should also revoke the Google token (`oauth2.googleapis.com/revoke`).
 
 ## Decisions
+- 2026-10-16: TikTok before Meta (owner priority). Upload via `FILE_UPLOAD` unless an R2 custom domain gets verified for `PULL_FROM_URL`.
 - 2026-10-13: Free Herd → MySQL from the official installer, Redis from Homebrew. Horizon deferred to Phase 4.
 - 2026-10-13: Domain: User→Video, User→Post; Post→Video (one video per post, video reusable); Post→Publication→SocialAccount. Per-platform text on Publication (default caption on Post). Statuses Pending/Uploading/Processing/Published/Failed; scheduling via `Post.publish_at`, no Scheduled status. Publication authorized via its Post (no own policy).
 - 2026-10-13: FKs: deleting a video cascades its posts (restrict would break user-delete cascades); deleting a SocialAccount nulls `publications.social_account_id`, `platform` is snapshotted on Publication to keep history. Unique (post, account).
