@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\VideoUploadController;
+use App\Http\Controllers\YouTubeConnectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -14,6 +15,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('videos/uploads', [VideoUploadController::class, 'store'])->name('videos.uploads.store');
 
     Route::post('videos', [VideoController::class, 'store'])->name('videos.store');
+
+    Route::get('auth/google/redirect', [YouTubeConnectionController::class, 'redirect'])->name('youtube.redirect');
+    Route::get('auth/google/callback', [YouTubeConnectionController::class, 'callback'])->name('youtube.callback');
 });
 
 require __DIR__.'/settings.php';
