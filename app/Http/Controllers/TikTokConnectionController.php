@@ -18,6 +18,8 @@ class TikTokConnectionController extends Controller
 {
     private const array SCOPES = ['user.info.basic', 'video.upload'];
 
+    private const string DIRECT_POST_SCOPE = 'video.publish';
+
     public function redirect(): SymfonyRedirectResponse
     {
         $tiktok = Socialite::driver('tiktok');
@@ -27,7 +29,7 @@ class TikTokConnectionController extends Controller
         }
 
         return $tiktok
-            ->scopes(self::SCOPES)
+            ->scopes($this->scopes())
             ->redirect();
     }
 
@@ -49,7 +51,7 @@ class TikTokConnectionController extends Controller
             throw new LogicException('The tiktok Socialite driver must return an OAuth 2 user.');
         }
 
-        if (array_diff(self::SCOPES, $tiktokUser->approvedScopes)) {
+        if (array_diff($this->scopes(), $tiktokUser->approvedScopes)) {
             return $this->failed(__('Please allow all requested TikTok permissions.'));
         }
 
@@ -58,6 +60,7 @@ class TikTokConnectionController extends Controller
             'avatar_url' => $tiktokUser->getAvatar(),
             'access_token' => $tiktokUser->token,
             'token_expires_at' => now()->addSeconds($tiktokUser->expiresIn),
+            'reconnection_required_at' => null,
             'scopes' => $tiktokUser->approvedScopes,
         ];
 
@@ -76,6 +79,14 @@ class TikTokConnectionController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('TikTok account connected.')]);
 
         return to_route('social-accounts.index');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function scopes(): array
+    {
+        return config('services.tiktok.direct_post') ? [...self::SCOPES, self::DIRECT_POST_SCOPE] : self::SCOPES;
     }
 
     /**

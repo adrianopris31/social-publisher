@@ -51,4 +51,14 @@ class SocialAccountFactory extends Factory
             'token_expires_at' => now()->subHour(),
         ]);
     }
+
+    /**
+     * Indicate that the platform revoked the account's access and the user must reconnect it.
+     */
+    public function needsReconnection(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'reconnection_required_at' => now(),
+        ]);
+    }
 }
