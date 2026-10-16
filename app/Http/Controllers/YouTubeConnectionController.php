@@ -69,6 +69,7 @@ class YouTubeConnectionController extends Controller
             'avatar_url' => data_get($channel, 'snippet.thumbnails.high.url'),
             'access_token' => $googleUser->token,
             'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
+            'reconnection_required_at' => null,
             'scopes' => $googleUser->approvedScopes,
         ];
 

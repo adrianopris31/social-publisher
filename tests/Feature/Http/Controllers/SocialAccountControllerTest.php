@@ -3,6 +3,7 @@
 use App\Enums\Platform;
 use App\Models\SocialAccount;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('guests are redirected to login', function () {
@@ -26,6 +27,7 @@ test('it lists only the social accounts of the user without their tokens', funct
                 ->where('platform', 'youtube')
                 ->where('display_name', 'My Shorts Channel')
                 ->where('avatar_url', $account->avatar_url)
+                ->where('needs_reconnection', false)
                 ->has('connected_at')
                 ->missing('access_token')
                 ->missing('refresh_token')
@@ -34,6 +36,7 @@ test('it lists only the social accounts of the user without their tokens', funct
 });
 
 test('the owner can disconnect a social account', function () {
+    Http::fake();
     $account = SocialAccount::factory()->create();
 
     $this->actingAs($account->user)

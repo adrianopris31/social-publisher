@@ -114,3 +114,11 @@ test('it does not connect an account when tiktok rejects the token exchange', fu
 
     expect(SocialAccount::count())->toBe(0);
 });
+
+test('it also asks for direct post access when direct posting is enabled', function () {
+    config(['services.tiktok.direct_post' => true]);
+
+    $response = $this->actingAs(User::factory()->create())->get(route('tiktok.redirect'));
+
+    expect(urldecode((string) $response->headers->get('Location')))->toContain('video.publish');
+});

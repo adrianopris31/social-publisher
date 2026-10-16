@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\RevokeSocialAccountToken;
 use App\Models\SocialAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class SocialAccountController extends Controller
                 'platform' => $account->platform,
                 'display_name' => $account->display_name,
                 'avatar_url' => $account->avatar_url,
+                'needs_reconnection' => $account->reconnection_required_at !== null,
                 'connected_at' => $account->created_at?->toIso8601String(),
             ]);
 
@@ -34,8 +36,10 @@ class SocialAccountController extends Controller
     /**
      * Disconnect the given social account.
      */
-    public function destroy(SocialAccount $socialAccount): RedirectResponse
+    public function destroy(SocialAccount $socialAccount, RevokeSocialAccountToken $revokeToken): RedirectResponse
     {
+        $revokeToken->handle($socialAccount);
+
         $socialAccount->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __(':name disconnected.', ['name' => $socialAccount->display_name])]);

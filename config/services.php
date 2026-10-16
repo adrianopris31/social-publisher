@@ -41,9 +41,32 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI'),
+        'graph_version' => env('FACEBOOK_GRAPH_VERSION', 'v23.0'),
+    ],
+
     'tiktok' => [
         'client_id' => env('TIKTOK_CLIENT_ID'),
         'client_secret' => env('TIKTOK_CLIENT_SECRET'),
         'redirect' => env('TIKTOK_REDIRECT_URI'),
+        // Needs the Direct Post product (video.publish scope) on the TikTok app. Unaudited apps can only post privately.
+        'direct_post' => (bool) env('TIKTOK_DIRECT_POST', false),
+    ],
+
+    'threads' => [
+        'client_id' => env('THREADS_CLIENT_ID'),
+        'client_secret' => env('THREADS_CLIENT_SECRET'),
+        'redirect' => env('THREADS_REDIRECT_URI'),
+    ],
+
+    'linkedin-openid' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID'),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
+        'redirect' => env('LINKEDIN_REDIRECT_URI'),
+        // LinkedIn versions its REST API monthly (YYYYMM) and retires versions after about a year.
+        'api_version' => env('LINKEDIN_API_VERSION', '202601'),
     ],
 ];

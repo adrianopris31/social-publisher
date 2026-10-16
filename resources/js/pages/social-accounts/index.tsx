@@ -1,5 +1,14 @@
 import { Form, Head } from '@inertiajs/react';
-import { Facebook, Instagram, Music2, Plus, Youtube } from 'lucide-react';
+import {
+    AlertTriangle,
+    AtSign,
+    Facebook,
+    Instagram,
+    Linkedin,
+    Music2,
+    Plus,
+    Youtube,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import SocialAccountController from '@/actions/App/Http/Controllers/SocialAccountController';
 import Heading from '@/components/heading';
@@ -22,17 +31,21 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { redirect as linkedinRedirect } from '@/routes/linkedin';
+import { redirect as metaRedirect } from '@/routes/meta';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
+import { redirect as threadsRedirect } from '@/routes/threads';
 import { redirect as tiktokRedirect } from '@/routes/tiktok';
 import { redirect as youtubeRedirect } from '@/routes/youtube';
 
-type Platform = 'youtube' | 'instagram' | 'facebook' | 'tiktok';
+import type { Platform } from '@/types';
 
 type SocialAccount = {
     id: number;
     platform: Platform;
     display_name: string;
     avatar_url: string | null;
+    needs_reconnection: boolean;
     connected_at: string | null;
 };
 
@@ -59,25 +72,45 @@ const platforms: PlatformInfo[] = [
         platform: 'instagram',
         name: 'Instagram',
         accountNoun: 'account',
-        description: 'Publish Reels to professional Instagram accounts.',
+        description:
+            'Publish Reels to professional Instagram accounts linked to a Facebook Page. Connecting goes through Facebook Login.',
         icon: Instagram,
-        connectUrl: null,
+        connectUrl: metaRedirect.url(),
     },
     {
         platform: 'facebook',
         name: 'Facebook',
         accountNoun: 'Page',
-        description: 'Publish Reels to your Facebook Pages.',
+        description:
+            'Publish Reels to your Facebook Pages. Connecting also adds the Instagram accounts linked to them.',
         icon: Facebook,
-        connectUrl: null,
+        connectUrl: metaRedirect.url(),
     },
     {
         platform: 'tiktok',
         name: 'TikTok',
         accountNoun: 'account',
-        description: 'Send videos to your TikTok inbox or profile.',
+        description:
+            'Send videos to your TikTok inbox to finish posting in the app.',
         icon: Music2,
         connectUrl: tiktokRedirect.url(),
+    },
+    {
+        platform: 'threads',
+        name: 'Threads',
+        accountNoun: 'profile',
+        description: 'Publish video posts to your Threads profiles.',
+        icon: AtSign,
+        connectUrl: threadsRedirect.url(),
+    },
+    {
+        platform: 'linkedin',
+        name: 'LinkedIn',
+        accountNoun: 'profile',
+        description:
+            'Share videos on your LinkedIn profile. LinkedIn asks you to reconnect every 60 days.',
+        icon: Linkedin,
+        connectUrl: linkedinRedirect.url(),
     },
 ];
 
@@ -173,6 +206,7 @@ function PlatformCard({
                                 key={account.id}
                                 account={account}
                                 platformName={info.name}
+                                connectUrl={info.connectUrl}
                             />
                         ))}
                     </ul>
@@ -185,9 +219,11 @@ function PlatformCard({
 function AccountRow({
     account,
     platformName,
+    connectUrl,
 }: {
     account: SocialAccount;
     platformName: string;
+    connectUrl: string | null;
 }) {
     return (
         <li className="flex items-center justify-between gap-4 p-3">
@@ -207,7 +243,14 @@ function AccountRow({
                     <p className="truncate text-sm font-medium">
                         {account.display_name}
                     </p>
-                    {account.connected_at && (
+                    {account.needs_reconnection && (
+                        <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                            <AlertTriangle className="size-3.5" />
+                            Access expired or was revoked. Reconnect to keep
+                            publishing.
+                        </p>
+                    )}
+                    {!account.needs_reconnection && account.connected_at && (
                         <p className="text-xs text-muted-foreground">
                             Connected{' '}
                             {dateFormatter.format(
@@ -218,7 +261,17 @@ function AccountRow({
                 </div>
             </div>
 
-            <DisconnectDialog account={account} platformName={platformName} />
+            <div className="flex shrink-0 items-center gap-1">
+                {account.needs_reconnection && connectUrl && (
+                    <Button asChild size="sm">
+                        <a href={connectUrl}>Reconnect</a>
+                    </Button>
+                )}
+                <DisconnectDialog
+                    account={account}
+                    platformName={platformName}
+                />
+            </div>
         </li>
     );
 }
