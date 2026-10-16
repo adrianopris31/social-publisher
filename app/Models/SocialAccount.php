@@ -10,7 +10,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property Platform $platform
+ * @property string $external_id
+ * @property string $display_name
+ * @property string $access_token
+ * @property string|null $refresh_token
+ * @property Carbon|null $token_expires_at
+ * @property list<string>|null $scopes
+ * @property string|null $avatar_url
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 #[Fillable(['platform', 'external_id', 'display_name', 'scopes', 'avatar_url', 'access_token', 'refresh_token', 'token_expires_at'])]
 #[Hidden(['access_token', 'refresh_token'])]
 class SocialAccount extends Model
