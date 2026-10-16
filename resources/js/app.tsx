@@ -5,6 +5,7 @@ import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import type { FlashToast } from '@/types/ui';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -23,11 +24,13 @@ void createInertiaApp({
         }
     },
     strictMode: true,
-    withApp(app) {
+    withApp(app, { page }) {
         return (
             <TooltipProvider delayDuration={0}>
                 {app}
-                <Toaster />
+                <Toaster
+                    initialToast={page.flash?.toast as FlashToast | undefined}
+                />
             </TooltipProvider>
         );
     },

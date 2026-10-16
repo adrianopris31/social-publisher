@@ -1,11 +1,15 @@
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useAppearance } from '@/hooks/use-appearance';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import type { FlashToast } from '@/types/ui';
 
-function Toaster({ ...props }: ToasterProps) {
+function Toaster({
+    initialToast,
+    ...props
+}: ToasterProps & { initialToast?: FlashToast }) {
     const { appearance } = useAppearance();
 
-    useFlashToast();
+    useFlashToast(initialToast);
 
     return (
         <Sonner

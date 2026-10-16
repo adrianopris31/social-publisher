@@ -3,17 +3,28 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import type { FlashToast } from '@/types/ui';
 
-export function useFlashToast(): void {
+function showToast(data: FlashToast | undefined): void {
+    if (!data) {
+        return;
+    }
+
+    // A stable id lets sonner drop the duplicate if the initial flash event also arrives.
+    toast[data.type](data.message, { id: `${data.type}:${data.message}` });
+}
+
+/**
+ * Show flashed toasts. The initial page's toast is passed in because Inertia
+ * fires the first flash event before this effect subscribes, e.g. after an
+ * OAuth callback redirects back with a full page load.
+ */
+export function useFlashToast(initialToast?: FlashToast): void {
     useEffect(() => {
+        showToast(initialToast);
+
         return router.on('flash', (event) => {
             const flash = (event as CustomEvent).detail?.flash;
-            const data = flash?.toast as FlashToast | undefined;
 
-            if (!data) {
-                return;
-            }
-
-            toast[data.type](data.message);
+            showToast(flash?.toast as FlashToast | undefined);
         });
     }, []);
 }
