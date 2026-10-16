@@ -42,3 +42,9 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+
+# Local-only (not published)
+/.ai
+/.github
+/docs
+/pnpm-workspace.yaml

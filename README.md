@@ -4,8 +4,6 @@ Upload one vertical video once, customise the caption per platform, and publish 
 
 Built for individual creators: every user owns their own videos, posts and connected accounts, and can connect several accounts per platform.
 
-> Living status and decisions: [`docs/PROGRESS.md`](docs/PROGRESS.md). Stable architecture context: [`docs/PROJECT.md`](docs/PROJECT.md).
-
 ---
 
 ## Contents
