@@ -36,4 +36,14 @@ class PostFactory extends Factory
             'publish_at' => now()->addDay(),
         ]);
     }
+
+    /**
+     * Indicate that the publish jobs of the post were already queued.
+     */
+    public function dispatched(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'dispatched_at' => now(),
+        ]);
+    }
 }
