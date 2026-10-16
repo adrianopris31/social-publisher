@@ -2,8 +2,10 @@
 
 use App\Enums\VideoStatus;
 use App\Jobs\ProbeVideo;
+use App\Jobs\TranscodeVideo;
 use App\Models\Video;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -51,7 +53,7 @@ test('it marks a vertical h264 video as ready and stores its metadata', function
 test('it swaps the dimensions of a video rotated by 90 degrees', function () {
     Storage::fake('r2');
     Process::preventStrayProcesses();
-    Process::fake(['*ffprobe*' => Process::result(output: ffprobeOutput('hevc', 1920, 1080, '12.500000', rotation: -90))]);
+    Process::fake(['*ffprobe*' => Process::result(output: ffprobeOutput('h264', 1920, 1080, '12.500000', rotation: -90))]);
     $video = storedUnprocessedVideo();
 
     (new ProbeVideo($video))->handle();
@@ -105,4 +107,50 @@ test('it rejects the video without deleting its file when the job fails for good
         ->status->toBe(VideoStatus::Rejected)
         ->rejection_reason->toBe('We could not process this video. Please upload it again.');
     Storage::disk('r2')->assertExists($video->path);
+});
+
+test('it queues a transcode instead of marking the video ready when platforms would not accept the format', function (array $streams, string $mimeType) {
+    Storage::fake('r2');
+    Queue::fake([TranscodeVideo::class]);
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: json_encode([
+        'streams' => $streams,
+        'format' => ['duration' => '20.000000'],
+    ], JSON_THROW_ON_ERROR))]);
+    $video = storedUnprocessedVideo();
+    $video->update(['mime_type' => $mimeType]);
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Pending)
+        ->duration_ms->toBe(20_000);
+    Queue::assertPushed(TranscodeVideo::class, fn (TranscodeVideo $job) => $job->video->is($video));
+})->with([
+    'hevc video' => [[['codec_type' => 'video', 'codec_name' => 'hevc', 'width' => 1080, 'height' => 1920]], 'video/mp4'],
+    'opus audio' => [[
+        ['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920],
+        ['codec_type' => 'audio', 'codec_name' => 'opus'],
+    ], 'video/mp4'],
+    'quicktime container' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920]], 'video/quicktime'],
+    'above 60 fps' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920, 'avg_frame_rate' => '120/1']], 'video/mp4'],
+]);
+
+test('it marks an h264 and aac mp4 ready without transcoding', function () {
+    Storage::fake('r2');
+    Queue::fake([TranscodeVideo::class]);
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: json_encode([
+        'streams' => [
+            ['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920, 'avg_frame_rate' => '30000/1001'],
+            ['codec_type' => 'audio', 'codec_name' => 'aac'],
+        ],
+        'format' => ['duration' => '20.000000'],
+    ], JSON_THROW_ON_ERROR))]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh()->status)->toBe(VideoStatus::Ready);
+    Queue::assertNothingPushed();
 });

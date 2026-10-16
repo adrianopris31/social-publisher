@@ -48,8 +48,7 @@ class ProbeVideo implements ShouldQueue
 
         $result = Process::run([
             'ffprobe', '-v', 'error',
-            '-select_streams', 'v:0',
-            '-show_entries', 'stream=codec_name,width,height:stream_side_data=rotation:format=duration',
+            '-show_entries', 'stream=codec_type,codec_name,width,height,avg_frame_rate:stream_side_data=rotation:format=duration',
             '-of', 'json',
             $url,
         ]);
@@ -58,12 +57,18 @@ class ProbeVideo implements ShouldQueue
             throw new RuntimeException('ffprobe failed: '.$result->errorOutput());
         }
 
-        $probe = json_decode($result->output(), true);
+        $probe = (array) json_decode($result->output(), true);
+        $streams = (array) data_get($probe, 'streams', []);
 
-        $codec = (string) data_get($probe, 'streams.0.codec_name', '');
-        $width = (int) data_get($probe, 'streams.0.width', 0);
-        $height = (int) data_get($probe, 'streams.0.height', 0);
-        $rotation = (int) data_get($probe, 'streams.0.side_data_list.0.rotation', 0);
+        $videoStream = collect($streams)->first(fn (mixed $stream): bool => data_get($stream, 'codec_type', 'video') === 'video', []);
+        $audioStream = collect($streams)->first(fn (mixed $stream): bool => data_get($stream, 'codec_type') === 'audio');
+
+        $codec = (string) data_get($videoStream, 'codec_name', '');
+        $width = (int) data_get($videoStream, 'width', 0);
+        $height = (int) data_get($videoStream, 'height', 0);
+        $rotation = (int) data_get($videoStream, 'side_data_list.0.rotation', 0);
+        $frameRate = $this->frameRate((string) data_get($videoStream, 'avg_frame_rate', '0/1'));
+        $audioCodec = $audioStream === null ? null : (string) data_get($audioStream, 'codec_name', '');
         $durationMs = (int) round((float) data_get($probe, 'format.duration', 0) * 1000);
 
         if (abs($rotation) === 90) {
@@ -84,10 +89,38 @@ class ProbeVideo implements ShouldQueue
             return;
         }
 
+        if ($this->needsTranscoding($codec, $audioCodec, $frameRate)) {
+            $this->video->save();
+            TranscodeVideo::dispatch($this->video);
+
+            return;
+        }
+
         $this->video->update([
             'status' => VideoStatus::Ready,
             'rejection_reason' => null,
         ]);
+    }
+
+    /**
+     * Every platform accepts H.264 + AAC in an MP4 at up to 60 fps; anything else is converted first.
+     */
+    private function needsTranscoding(string $codec, ?string $audioCodec, float $frameRate): bool
+    {
+        return $this->video->mime_type !== 'video/mp4'
+            || $codec !== 'h264'
+            || ($audioCodec !== null && $audioCodec !== 'aac')
+            || $frameRate > 60.5;
+    }
+
+    /**
+     * Parse ffprobe's "30000/1001" style frame rate.
+     */
+    private function frameRate(string $rate): float
+    {
+        [$numerator, $denominator] = array_pad(explode('/', $rate), 2, '1');
+
+        return (float) $denominator > 0 ? (float) $numerator / (float) $denominator : 0.0;
     }
 
     /**

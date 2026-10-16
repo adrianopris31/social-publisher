@@ -1,6 +1,7 @@
-import { Head, useHttp } from '@inertiajs/react';
+import { Head, router, useHttp } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
+import { toast } from 'sonner';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { uploadToPresignedUrl } from '@/lib/upload-to-presigned-url';
 import type { PresignedUpload } from '@/lib/upload-to-presigned-url';
-import { create, store as storeVideo } from '@/routes/videos';
+import {
+    create,
+    index as videosIndex,
+    store as storeVideo,
+} from '@/routes/videos';
 import { store as storeUpload } from '@/routes/videos/uploads';
 
 type UploadTicketForm = {
@@ -111,7 +116,15 @@ export default function CreateVideo() {
             confirmation.setData({ key: presigned.key, filename: file.name });
             const video = await confirmation.post(storeVideo.url());
 
-            setStatus(video ? 'done' : 'failed');
+            if (!video) {
+                setStatus('failed');
+
+                return;
+            }
+
+            setStatus('done');
+            toast.success('Uploaded. We are checking the video now.');
+            router.visit(videosIndex());
         } catch {
             setStatus('failed');
             setUploadError(
