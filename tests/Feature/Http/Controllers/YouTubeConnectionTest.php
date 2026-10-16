@@ -64,7 +64,7 @@ test('it connects the youtube channel of the authenticated user', function () {
 
     $this->actingAs($user)
         ->get(route('youtube.callback'))
-        ->assertRedirect(route('dashboard'))
+        ->assertRedirect(route('social-accounts.index'))
         ->assertInertiaFlash('toast.type', 'success');
 
     expect(SocialAccount::sole())
@@ -119,7 +119,7 @@ test('it does not connect an account when the user denies access', function () {
 
     $this->actingAs(User::factory()->create())
         ->get(route('youtube.callback', ['error' => 'access_denied']))
-        ->assertRedirect(route('dashboard'))
+        ->assertRedirect(route('social-accounts.index'))
         ->assertInertiaFlash('toast.type', 'error');
 
     expect(SocialAccount::count())->toBe(0);
@@ -131,7 +131,7 @@ test('it does not connect an account without the upload scope', function () {
 
     $this->actingAs(User::factory()->create())
         ->get(route('youtube.callback'))
-        ->assertRedirect(route('dashboard'))
+        ->assertRedirect(route('social-accounts.index'))
         ->assertInertiaFlash('toast.type', 'error');
 
     expect(SocialAccount::count())->toBe(0);
@@ -143,7 +143,7 @@ test('it does not connect an account when the channel cannot be loaded', functio
 
     $this->actingAs(User::factory()->create())
         ->get(route('youtube.callback'))
-        ->assertRedirect(route('dashboard'))
+        ->assertRedirect(route('social-accounts.index'))
         ->assertInertiaFlash('toast.type', 'error');
 
     expect(SocialAccount::count())->toBe(0);

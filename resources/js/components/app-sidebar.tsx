@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Upload } from 'lucide-react';
+import { BookOpen, FolderGit2, LayoutGrid, Link2, Upload } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,6 +14,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import { create as createVideo } from '@/routes/videos';
 import type { NavItem } from '@/types';
 
@@ -27,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Upload video',
         href: createVideo(),
         icon: Upload,
+    },
+    {
+        title: 'Connected accounts',
+        href: socialAccountsIndex(),
+        icon: Link2,
     },
 ];
 

@@ -86,16 +86,16 @@ class YouTubeConnectionController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('YouTube channel connected.')]);
 
-        return to_route('dashboard');
+        return to_route('social-accounts.index');
     }
 
     /**
-     * Redirect to the dashboard with an error toast.
+     * Redirect to the social accounts page with an error toast.
      */
     private function failed(string $message): RedirectResponse
     {
         Inertia::flash('toast', ['type' => 'error', 'message' => $message]);
 
-        return to_route('dashboard');
+        return to_route('social-accounts.index');
     }
 }
