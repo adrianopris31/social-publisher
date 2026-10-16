@@ -4,10 +4,10 @@ Budget: max 60 lines / ~500 words. Compact older entries instead of appending fo
 
 ## Current phase & task
 Phase 3 – Account connections. Steps 1–3 done (setup, YouTube OAuth, connected-accounts page). **Next: Step 4 token refresh (owner)**, then Step 5 Meta.
-Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https://social-publisher.test --host-header=social-publisher.test`; `GOOGLE_REDIRECT_URI` points there. Pages opened via ngrok get no JS while `npm run dev` runs (Vite CORS only allows localhost/`.test`) → use `.test` for UI work, or allow the ngrok origin / build assets when testing OAuth end to end.
+Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https://social-publisher.test --host-header=social-publisher.test`; `GOOGLE_REDIRECT_URI` points there. `vite.config.ts` allows `*.ngrok-free.(app|dev)` in `server.cors` (replaces the plugin defaults, so localhost/`.test` are re-listed) → the dev server works through ngrok.
 
 ## Done
-- 2026-10-16: Phase 3 Steps 1–3: Socialite + `services.google`; `YouTubeConnectionController` (`auth/google/redirect|callback`, scopes `youtube.upload` + `youtube.readonly`, `access_type=offline` + `prompt=consent`, denied/state/granular-scope/no-channel failures, `updateOrCreate` via the user's relation, refresh token kept when Google omits it); `SocialAccountController` index + destroy (route `can:delete`), page `social-accounts/index` (per-platform cards, connect, disconnect dialog), sidebar link. OAuth verified with a real channel; the page was only seen server-rendered (via ngrok, no JS), interactive check on `.test` pending. Toast hook also shows the initial page's flash (race unconfirmed: the missing toast was likely the ngrok no-JS issue).
+- 2026-10-16: Phase 3 Steps 1–3: Socialite + `services.google`; `YouTubeConnectionController` (`auth/google/redirect|callback`, scopes `youtube.upload` + `youtube.readonly`, `access_type=offline` + `prompt=consent`, denied/state/granular-scope/no-channel failures, `updateOrCreate` via the user's relation, refresh token kept when Google omits it); `SocialAccountController` index + destroy (route `can:delete`), page `social-accounts/index` (per-platform cards, connect, disconnect dialog), sidebar link. OAuth verified with a real channel; page verified in the browser via ngrok (avatar, disconnect dialog). Toast hook also shows the initial page's flash (race unconfirmed: the missing toast was the ngrok no-JS issue).
 - 2026-10-15: Phase 2 done. File cleanup: `Video` `deleted` event deletes its file; `User` `deleting` event deletes `videos/{id}/` (DB cascade skips model events); `Video` is `Prunable` (Rejected > 7 days), `model:prune` scheduled daily. `TestCase::setUp` fakes `r2` globally so tests never hit the real bucket.
 - 2026-10-15: `ProbeVideo` job: `VideoStatus` enum (Pending/Ready/Rejected) + `status`/`rejection_reason` columns, dispatched from `VideoController@store`; ffprobe via `Process` on an R2 `temporaryUrl`, rotation swap, codec/vertical/ratio 0.45–0.6/3–180 s rules, rejected files deleted. Tests fake ffprobe with `Process::fake(['*ffprobe*' => ...])` (array commands are quoted, `'ffprobe *'` doesn't match). Controller tests need `Queue::fake([ProbeVideo::class])` (test queue is `sync`). ffprobe failure throws → `#[Tries(3)]`/`#[Backoff([10, 60])]` → `failed()` marks Rejected (generic reason, file kept); `#[DeleteWhenMissingModels]`.
 - 2026-10-13: Phase 0: git on `main`; Herd site `social-publisher.test` on PHP 8.5 (`~/.zshrc` puts Herd first); MySQL 9 with least-privilege app user; Redis (queue + cache); FFmpeg 9; docs + `CLAUDE.md` imports.
@@ -17,7 +17,7 @@ Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https:/
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 3 Step 4 spec (token refresh) to be written.
+- Phase 3 Step 4 (token refresh): spec given to owner 2026-10-16.
 
 ## Next
 1. Phase 3 Step 4: refresh YouTube access tokens before publishing.

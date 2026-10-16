@@ -29,6 +29,15 @@ export default defineConfig({
         }),
     ]),
     server: {
+        // Replaces laravel-vite-plugin's default origins, so localhost and Herd's *.test stay listed.
+        // ngrok serves the app over HTTPS for OAuth callbacks (Google rejects *.test redirect URIs).
+        cors: {
+            origin: [
+                /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/,
+                /^https?:\/\/.*\.test(:\d+)?$/,
+                /^https:\/\/[a-z0-9-]+\.ngrok-free\.(?:app|dev)$/,
+            ],
+        },
         watch: {
             ignored: [
                 '**/.agents/**',
