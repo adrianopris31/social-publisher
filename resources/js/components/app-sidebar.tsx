@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid, Link2, Upload } from 'lucide-react';
+import { Film, LayoutGrid, Link2, Send, SquarePen } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -15,7 +14,8 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
-import { create as createVideo } from '@/routes/videos';
+import { create as createPost, index as postsIndex } from '@/routes/posts';
+import { index as videosIndex } from '@/routes/videos';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -25,27 +25,24 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Upload video',
-        href: createVideo(),
-        icon: Upload,
+        title: 'New post',
+        href: createPost(),
+        icon: SquarePen,
+    },
+    {
+        title: 'Posts',
+        href: postsIndex(),
+        icon: Send,
+    },
+    {
+        title: 'Videos',
+        href: videosIndex(),
+        icon: Film,
     },
     {
         title: 'Connected accounts',
         href: socialAccountsIndex(),
         icon: Link2,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
     },
 ];
 
@@ -69,7 +66,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
