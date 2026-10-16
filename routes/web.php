@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SocialAccountController;
+use App\Http\Controllers\TikTokConnectionController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\VideoUploadController;
 use App\Http\Controllers\YouTubeConnectionController;
@@ -24,6 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('auth/google/redirect', [YouTubeConnectionController::class, 'redirect'])->name('youtube.redirect');
     Route::get('auth/google/callback', [YouTubeConnectionController::class, 'callback'])->name('youtube.callback');
+
+    Route::get('auth/tiktok/redirect', [TikTokConnectionController::class, 'redirect'])->name('tiktok.redirect');
+    Route::get('auth/tiktok/callback', [TikTokConnectionController::class, 'callback'])->name('tiktok.callback');
 });
 
 require __DIR__.'/settings.php';

@@ -3,10 +3,11 @@
 Budget: max 60 lines / ~500 words. Compact older entries instead of appending forever.
 
 ## Current phase & task
-Phase 3 – Account connections. Steps 1–4 done (setup, YouTube OAuth, connected-accounts page, token refresh). **Next: Step 5 TikTok** (setup waiting on owner: approve `socialiteproviders/tiktok`, developer app + sandbox), then Step 6 Meta.
+Phase 3 – Account connections. Steps 1–4 done (setup, YouTube OAuth, connected-accounts page, token refresh). **Step 5 TikTok in progress**: connection built, owner to test with the sandbox target user; then 5.3 token refresh, then Step 6 Meta.
 Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https://social-publisher.test --host-header=social-publisher.test`; `GOOGLE_REDIRECT_URI` points there. `vite.config.ts` allows `*.ngrok-free.(app|dev)` in `server.cors` (replaces the plugin defaults, so localhost/`.test` are re-listed) → the dev server works through ngrok.
 
 ## Done
+- 2026-10-16: Phase 3 Step 5.1–5.2: `socialiteproviders/tiktok` (registered via `SocialiteWasCalled` in `AppServiceProvider`, v2 endpoints, `client_key`), `services.tiktok`; `TikTokConnectionController` (`auth/tiktok/redirect|callback`, scopes `user.info.basic` + `video.upload`, `open_id` as `external_id`, Guzzle errors from the token/user-info calls → error toast); TikTok card's Connect enabled.
 - 2026-10-16: Phase 3 Step 4: `RefreshYouTubeAccessToken` action (`handle(SocialAccount)`): returns early if valid > 5 min; POSTs `oauth2.googleapis.com/token` via `Http::asForm()` (not Socialite: its `Token` requires a refresh token Google doesn't return, and it bypasses `Http::fake`); `invalid_grant` or no refresh token → `SocialAccountNeedsReconnectionException` (no retry), other errors → `RequestException` (retry). `@property` docblock on `SocialAccount` so Larastan sees casts.
 - 2026-10-16: Phase 3 Steps 1–3: Socialite + `services.google`; `YouTubeConnectionController` (`auth/google/redirect|callback`, scopes `youtube.upload` + `youtube.readonly`, `access_type=offline` + `prompt=consent`, denied/state/granular-scope/no-channel failures, `updateOrCreate` via the user's relation, refresh token kept when Google omits it); `SocialAccountController` index + destroy (route `can:delete`), page `social-accounts/index` (per-platform cards, connect, disconnect dialog), sidebar link. OAuth verified with a real channel; page verified in the browser via ngrok (avatar, disconnect dialog). Toast hook also shows the initial page's flash (race unconfirmed: the missing toast was the ngrok no-JS issue).
 - 2026-10-15: Phase 2 done. File cleanup: `Video` `deleted` event deletes its file; `User` `deleting` event deletes `videos/{id}/` (DB cascade skips model events); `Video` is `Prunable` (Rejected > 7 days), `model:prune` scheduled daily. `TestCase::setUp` fakes `r2` globally so tests never hit the real bucket.
@@ -18,7 +19,7 @@ Local OAuth: `ngrok http --url=sizzling-headlamp-credibly.ngrok-free.dev https:/
 - 2026-10-13: Phase 1: `SocialAccount`, `Video`, `Post`, `Publication` + `Platform`/`PublicationStatus` enums, owner-only policies (SocialAccount/Video/Post), factories with consistent ownership, 70 tests green.
 
 ## In progress
-- Phase 3 Step 5 TikTok: setup (developer app, Login Kit + Content Posting, sandbox target user, redirect `/auth/tiktok/callback` on ngrok).
+- Phase 3 Step 5 TikTok: real connection test via ngrok pending; 5.3 refresh (token 24 h, refresh token rotates → always save the new one).
 
 ## Next
 1. Phase 3 Step 5: TikTok connection (same shape as YouTube; token 24 h, refresh token rotates, valid 365 days).

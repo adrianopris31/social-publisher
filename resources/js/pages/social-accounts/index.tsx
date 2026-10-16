@@ -23,6 +23,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
+import { redirect as tiktokRedirect } from '@/routes/tiktok';
 import { redirect as youtubeRedirect } from '@/routes/youtube';
 
 type Platform = 'youtube' | 'instagram' | 'facebook' | 'tiktok';
@@ -76,7 +77,7 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'account',
         description: 'Send videos to your TikTok inbox or profile.',
         icon: Music2,
-        connectUrl: null,
+        connectUrl: tiktokRedirect.url(),
     },
 ];
 
