@@ -16,12 +16,12 @@ Stable context. Update only when a real decision changes. Living status lives in
 - Definition of done: tests pass, Pint + Larastan clean, owner understands it (one short question if a concept was new), `PROGRESS.md` updated.
 
 ## Product
-Web app for short-form creators: upload one vertical video once, customize metadata per platform, publish now or scheduled to YouTube Shorts, Instagram Reels, Facebook Reels, TikTok (later Snapchat Spotlight, X, Threads, LinkedIn). Built for the owner first, then opened as a product.
+Web app for short-form creators: upload one vertical video once, customize metadata per platform, publish now or scheduled to YouTube Shorts, Instagram Reels, Facebook Reels, TikTok, Threads, LinkedIn (later Snapchat Spotlight, X). Built for the owner first, then opened as a product.
 
 **User model**: individual creators only, no teams/tenants. A user owns their social accounts and may connect several per platform. Every query is scoped to the owning user (policies + scoped relationships).
 
 ## Stack
-- Laravel 13 monolith, PHP 8.5 (target), MySQL, Redis + Horizon.
+- Laravel 13 monolith, PHP 8.5 (target), MySQL, Redis + Horizon (`default` queue for short jobs, `uploads` queue for uploads/transcoding).
 - Inertia v3 + React 19 + TypeScript + Tailwind v4, shadcn/ui, Wayfinder, Fortify (starter kit).
 - Pest, Pint, Larastan. Local env: Laravel Herd; `herd share` for HTTPS OAuth callbacks (stable subdomain).
 
@@ -29,7 +29,7 @@ Web app for short-form creators: upload one vertical video once, customize metad
 - **Domain**: `SocialAccount` (user, platform, many per platform) · `Video` (asset + metadata) · `Post` (one publish intent) · `Publication` (per target account: caption/title/privacy, status, external id, error, timestamps). PHP enums for platform and status.
 - **Queues**: each platform publish is its own job → one failure never blocks others. Retries with backoff, per-platform rate limiting.
 - **OAuth**: Socialite + SocialiteProviders; token storage/refresh package (e.g. `pr4w/laravel-social-tokens`). TikTok rotates refresh tokens; Meta publishes per IG account / per Page.
-- **Publishing**: `PublisherInterface`, one implementation per platform, swappable for a unified third-party API later. YouTube via `google/apiclient` (resumable). Meta + TikTok via `Http` client.
+- **Publishing**: `App\Publishing\Publisher`, one implementation per platform, swappable for a unified third-party API later. All platforms via the `Http` client (YouTube resumable upload without `google/apiclient`).
 - **Storage**: Cloudflare R2 (S3). Browser uploads directly via presigned URLs (e.g. Uppy), never through PHP. Pull-based platforms get temporary signed URLs.
 - **Video processing**: FFmpeg/ffprobe (e.g. `pbmedia/laravel-ffmpeg`): metadata, validation (9:16, duration, size, codec), transcoding to a universally accepted format.
 - **Status**: "uploaded" ≠ "published". Track per-platform status; UI polls first, Reverb later.
