@@ -55,4 +55,15 @@ class PublicationFactory extends Factory
             'error_message' => fake()->sentence(),
         ]);
     }
+
+    /**
+     * Indicate that the platform accepted the upload and is still processing it.
+     */
+    public function processing(string $processingId = 'processing-123'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PublicationStatus::Processing,
+            'processing_id' => $processingId,
+        ]);
+    }
 }

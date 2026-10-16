@@ -8,8 +8,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
-#[Fillable(['video_id', 'caption', 'publish_at'])]
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $video_id
+ * @property string|null $caption
+ * @property Carbon|null $publish_at
+ * @property Carbon|null $dispatched_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[Fillable(['video_id', 'caption', 'publish_at', 'dispatched_at'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
@@ -24,6 +35,7 @@ class Post extends Model
     {
         return [
             'publish_at' => 'datetime',
+            'dispatched_at' => 'datetime',
         ];
     }
 

@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Threads\Provider as ThreadsProvider;
 use SocialiteProviders\TikTok\Provider as TikTokProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +30,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerSocialiteProviders();
+        $this->registerDevCommands();
+    }
+
+    /**
+     * Run the scheduler next to Horizon under `composer dev`, so scheduled posts go out locally.
+     */
+    protected function registerDevCommands(): void
+    {
+        DevCommands::artisan('schedule:work', 'scheduler');
     }
 
     /**
@@ -37,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('tiktok', TikTokProvider::class);
+            $event->extendSocialite('threads', ThreadsProvider::class);
         });
     }
 
