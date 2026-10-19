@@ -129,11 +129,16 @@ test('it reports the processing outcome of the uploaded video', function (string
     'still uploading' => ['uploaded', PublicationStatus::Processing],
 ]);
 
-test('it fails when youtube rejects the processed video', function () {
+test('it explains why youtube failed or rejected the processed video', function (array $status, string $message) {
     Http::fake(['www.googleapis.com/youtube/v3/videos*' => Http::response([
-        'items' => [['status' => ['uploadStatus' => 'rejected', 'rejectionReason' => 'duplicate']]],
+        'items' => [['status' => $status]],
     ])]);
     [$publication, $account] = youTubePublication(['status' => PublicationStatus::Processing, 'processing_id' => 'video-abc']);
 
-    app(YouTubePublisher::class)->checkStatus($publication, $account);
-})->throws(PublishingFailedException::class, 'YouTube rejected the video: duplicate.');
+    expect(fn () => app(YouTubePublisher::class)->checkStatus($publication, $account))
+        ->toThrow(PublishingFailedException::class, $message);
+})->with([
+    'duplicate' => [['uploadStatus' => 'rejected', 'rejectionReason' => 'duplicate'], 'YouTube rejected the video as a duplicate of one already on this channel.'],
+    'codec' => [['uploadStatus' => 'failed', 'failureReason' => 'codec'], 'YouTube could not decode the video. Upload it as an MP4 (H.264 + AAC) and retry.'],
+    'unknown reason' => [['uploadStatus' => 'failed', 'failureReason' => 'somethingNew'], 'YouTube could not process the video (somethingNew).'],
+]);

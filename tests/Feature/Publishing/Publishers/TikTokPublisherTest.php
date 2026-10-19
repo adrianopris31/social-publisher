@@ -131,12 +131,16 @@ test('it links a public direct post to the creator profile', function () {
         ->externalUrl->toBe('https://www.tiktok.com/@creator/video/7123');
 });
 
-test('it fails with the reason tiktok reports', function () {
-    Http::fake(['open.tiktokapis.com/v2/post/publish/status/fetch/' => Http::response(tikTokBody(['status' => 'FAILED', 'fail_reason' => 'file_format_check_failed']))]);
+test('it explains the reason tiktok reports for a failed post', function (string $reason, string $message) {
+    Http::fake(['open.tiktokapis.com/v2/post/publish/status/fetch/' => Http::response(tikTokBody(['status' => 'FAILED', 'fail_reason' => $reason]))]);
     $publication = tikTokPublication(attributes: ['status' => PublicationStatus::Processing, 'processing_id' => 'pub-1']);
 
-    app(TikTokPublisher::class)->checkStatus($publication, $publication->socialAccount);
-})->throws(PublishingFailedException::class, 'TikTok could not process the video: file_format_check_failed.');
+    expect(fn () => app(TikTokPublisher::class)->checkStatus($publication, $publication->socialAccount))
+        ->toThrow(PublishingFailedException::class, $message);
+})->with([
+    'known reason' => ['frame_rate_check_failed', 'TikTok rejected the frame rate. Videos must be 23 to 60 fps.'],
+    'unknown reason' => ['something_new', 'TikTok could not process the video (something_new).'],
+]);
 
 test('it maps tiktok error codes to the matching exception', function (string $code, int $status, string $exception, ?string $message) {
     Http::fake(['open.tiktokapis.com/*' => Http::response(tikTokBody(code: $code, message: 'Something'), $status)]);

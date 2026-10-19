@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Storage;
  */
 class FacebookPublisher implements Publisher
 {
+    private const int MIN_WIDTH = 540;
+
+    private const int MIN_HEIGHT = 960;
+
+    private const int MIN_DURATION_MS = 3_000;
+
+    private const int MAX_DURATION_MS = 90_000;
+
     public function publish(Publication $publication, SocialAccount $account, Video $video): PublishResult
     {
         $start = MetaGraph::throwIfFailed(
@@ -72,7 +80,7 @@ class FacebookPublisher implements Publisher
         }
 
         if (data_get($status, 'video_status') === 'error') {
-            throw new PublishingFailedException('Facebook could not process the Reel.');
+            throw new PublishingFailedException($this->processingFailureMessage($publication->post->video));
         }
 
         if (data_get($status, 'publishing_phase.status') === 'complete') {
@@ -80,5 +88,31 @@ class FacebookPublisher implements Publisher
         }
 
         return PublishResult::processing((string) $publication->processing_id);
+    }
+
+    /**
+     * Facebook gives no reason when it rejects a Reel, so name the Reels specs the video breaks.
+     */
+    private function processingFailureMessage(Video $video): string
+    {
+        $problems = [];
+
+        if ($video->width !== null && $video->height !== null) {
+            if (! $video->isNineBySixteen()) {
+                $problems[] = "it is {$video->width}×{$video->height}, but Reels must be 9:16 (for example 1080×1920)";
+            } elseif ($video->width < self::MIN_WIDTH || $video->height < self::MIN_HEIGHT) {
+                $problems[] = "it is {$video->width}×{$video->height}, but Reels must be at least 540×960";
+            }
+        }
+
+        if ($video->duration_ms !== null && ($video->duration_ms < self::MIN_DURATION_MS || $video->duration_ms > self::MAX_DURATION_MS)) {
+            $problems[] = 'it is '.round($video->duration_ms / 1000, 1).' seconds long, but Reels must be 3 to 90 seconds';
+        }
+
+        if ($problems === []) {
+            return 'Facebook could not process the Reel. Make sure the video is 9:16, at least 540×960 and 3 to 90 seconds long, then retry.';
+        }
+
+        return 'Facebook rejected the video: '.implode('; ', $problems).'.';
     }
 }

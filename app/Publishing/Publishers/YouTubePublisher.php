@@ -85,10 +85,42 @@ class YouTubePublisher implements Publisher
 
         return match ($status['uploadStatus'] ?? null) {
             'processed' => PublishResult::published($publication->external_id, $publication->external_url),
-            'failed' => throw new PublishingFailedException('YouTube could not process the video: '.($status['failureReason'] ?? 'unknown reason').'.'),
-            'rejected' => throw new PublishingFailedException('YouTube rejected the video: '.($status['rejectionReason'] ?? 'unknown reason').'.'),
+            'failed' => throw new PublishingFailedException($this->failureMessage((string) ($status['failureReason'] ?? ''))),
+            'rejected' => throw new PublishingFailedException($this->rejectionMessage((string) ($status['rejectionReason'] ?? ''))),
             'deleted' => throw new PublishingFailedException('The video was deleted on YouTube.'),
             default => PublishResult::processing((string) $publication->processing_id),
+        };
+    }
+
+    /**
+     * Turn YouTube's failureReason code into a message the creator can act on.
+     */
+    private function failureMessage(string $reason): string
+    {
+        return match ($reason) {
+            'codec' => 'YouTube could not decode the video. Upload it as an MP4 (H.264 + AAC) and retry.',
+            'conversion' => 'YouTube could not convert the video. Upload it again as an MP4 (H.264 + AAC).',
+            'emptyFile', 'invalidFile', 'tooSmall' => 'YouTube could not read the uploaded file. Upload the video again.',
+            'uploadAborted' => 'The upload to YouTube was interrupted. Retry.',
+            '' => 'YouTube could not process the video.',
+            default => "YouTube could not process the video ({$reason}).",
+        };
+    }
+
+    /**
+     * Turn YouTube's rejectionReason code into a message the creator can act on.
+     */
+    private function rejectionMessage(string $reason): string
+    {
+        return match ($reason) {
+            'duplicate' => 'YouTube rejected the video as a duplicate of one already on this channel.',
+            'claim', 'copyright' => 'YouTube rejected the video because of a copyright claim.',
+            'trademark' => 'YouTube rejected the video because of a trademark claim.',
+            'length' => 'The video is longer than this YouTube channel may upload. Verify the channel on YouTube to upload longer videos.',
+            'inappropriate', 'termsOfUse', 'legal' => 'YouTube rejected the video for breaking its policies. Check YouTube Studio for details.',
+            'uploaderAccountClosed', 'uploaderAccountSuspended' => 'The YouTube channel is closed or suspended.',
+            '' => 'YouTube rejected the video.',
+            default => "YouTube rejected the video ({$reason}).",
         };
     }
 

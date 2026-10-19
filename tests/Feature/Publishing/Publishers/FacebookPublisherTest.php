@@ -70,3 +70,19 @@ test('it fails with the phase error message', function () {
 
     app(FacebookPublisher::class)->checkStatus($publication, $publication->socialAccount);
 })->throws(PublishingFailedException::class, 'Facebook could not publish the Reel: Video too long.');
+
+test('it names the reels spec the video breaks when facebook rejects it without a reason', function (int $width, int $height, int $durationMs, string $message) {
+    Http::fake(['graph.facebook.com/*/reel-1?*' => Http::response([
+        'status' => ['video_status' => 'error', 'processing_phase' => ['status' => 'complete'], 'publishing_phase' => ['status' => 'not_started']],
+    ])]);
+    $publication = facebookPublication(['status' => PublicationStatus::Processing, 'processing_id' => 'reel-1']);
+    $publication->post->video->update(['width' => $width, 'height' => $height, 'duration_ms' => $durationMs]);
+
+    expect(fn () => app(FacebookPublisher::class)->checkStatus($publication, $publication->socialAccount))
+        ->toThrow(PublishingFailedException::class, $message);
+})->with([
+    'not 9:16' => [656, 1376, 8_000, 'Facebook rejected the video: it is 656×1376, but Reels must be 9:16 (for example 1080×1920).'],
+    'too small' => [360, 640, 8_000, 'Facebook rejected the video: it is 360×640, but Reels must be at least 540×960.'],
+    'too long' => [1080, 1920, 120_500, 'Facebook rejected the video: it is 120.5 seconds long, but Reels must be 3 to 90 seconds.'],
+    'within spec' => [1080, 1920, 30_000, 'Facebook could not process the Reel. Make sure the video is 9:16, at least 540×960 and 3 to 90 seconds long, then retry.'],
+]);

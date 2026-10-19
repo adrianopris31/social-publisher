@@ -127,8 +127,31 @@ class TikTokPublisher implements Publisher
         return match ($response->json('data.status')) {
             'SEND_TO_USER_INBOX' => PublishResult::published(),
             'PUBLISH_COMPLETE' => $this->publishedPost($response, $account),
-            'FAILED' => throw new PublishingFailedException('TikTok could not process the video: '.$response->json('data.fail_reason', 'unknown reason').'.'),
+            'FAILED' => throw new PublishingFailedException($this->failureMessage((string) $response->json('data.fail_reason', ''))),
             default => PublishResult::processing((string) $publication->processing_id),
+        };
+    }
+
+    /**
+     * Turn TikTok's fail_reason code into a message the creator can act on.
+     */
+    private function failureMessage(string $reason): string
+    {
+        return match ($reason) {
+            'file_format_check_failed' => 'TikTok could not read the video format. Upload the video as an MP4 (H.264) and retry.',
+            'duration_check_failed' => 'TikTok rejected the video length: it is shorter than 3 seconds or longer than this account may post.',
+            'frame_rate_check_failed' => 'TikTok rejected the frame rate. Videos must be 23 to 60 fps.',
+            'picture_size_check_failed' => 'TikTok rejected the resolution. Each side must be between 360 and 4096 pixels.',
+            'video_pull_failed' => 'TikTok could not download the video. Retry, and upload the video again if it keeps failing.',
+            'publish_cancelled' => 'The post was cancelled on TikTok.',
+            'auth_removed' => 'The TikTok account removed access for this app. Reconnect it, then retry.',
+            'spam_risk_too_many_posts' => 'This TikTok account reached its daily posting limit. Try again tomorrow.',
+            'spam_risk_user_banned_from_posting' => 'TikTok is blocking this account from posting. Check the account in the TikTok app.',
+            'spam_risk_text' => 'TikTok flagged the caption as spam. Edit the caption and retry.',
+            'spam_risk' => 'TikTok flagged this post as a spam risk. Try again later.',
+            'internal' => 'TikTok had an internal error. Retry in a few minutes.',
+            '' => 'TikTok could not process the video.',
+            default => "TikTok could not process the video ({$reason}).",
         };
     }
 
