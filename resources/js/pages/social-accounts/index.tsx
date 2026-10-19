@@ -2,6 +2,7 @@ import { Form, Head } from '@inertiajs/react';
 import {
     AlertTriangle,
     AtSign,
+    ChevronDown,
     Facebook,
     Instagram,
     Linkedin,
@@ -15,6 +16,11 @@ import Heading from '@/components/heading';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
     Card,
     CardContent,
@@ -55,6 +61,8 @@ type PlatformInfo = {
     accountNoun: string;
     description: string;
     icon: LucideIcon;
+    /** What the user needs on the platform's side before connecting. */
+    requirements: string[];
     /** OAuth start URL; null until the integration exists. */
     connectUrl: string | null;
 };
@@ -66,6 +74,11 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'channel',
         description: 'Publish Shorts to your YouTube channels.',
         icon: Youtube,
+        requirements: [
+            "A YouTube channel on the Google account you sign in with. Create one at youtube.com if you haven't yet.",
+            'If you manage several channels (Brand Accounts), pick the right one when Google asks.',
+            'Vertical videos up to 3 minutes are published as Shorts.',
+        ],
         connectUrl: youtubeRedirect.url(),
     },
     {
@@ -75,6 +88,11 @@ const platforms: PlatformInfo[] = [
         description:
             'Publish Reels to professional Instagram accounts linked to a Facebook Page. Connecting goes through Facebook Login.',
         icon: Instagram,
+        requirements: [
+            "A professional Instagram account (Creator or Business). Personal accounts can't publish through the API. Switch in Instagram: Settings → Account type and tools → Switch to professional account.",
+            'The Instagram account must be linked to a Facebook Page you manage. In Facebook, open the Page → Settings → Linked accounts → Instagram → Connect. Linking Instagram to your personal Facebook profile (Accounts Center) is not enough.',
+            'In the Facebook window, choose Edit access and select both the Page and the Instagram account.',
+        ],
         connectUrl: metaRedirect.url(),
     },
     {
@@ -84,6 +102,11 @@ const platforms: PlatformInfo[] = [
         description:
             'Publish Reels to your Facebook Pages. Connecting also adds the Instagram accounts linked to them.',
         icon: Facebook,
+        requirements: [
+            "A Facebook Page where you have full control. Personal profiles can't publish through the API.",
+            'In the Facebook window, choose Edit access and select every Page (and linked Instagram account) you want to publish to.',
+            'Facebook Reels need vertical 9:16 videos, at least 540×960, 3–90 seconds long.',
+        ],
         connectUrl: metaRedirect.url(),
     },
     {
@@ -93,6 +116,10 @@ const platforms: PlatformInfo[] = [
         description:
             'Send videos to your TikTok inbox to finish posting in the app.',
         icon: Music2,
+        requirements: [
+            'Sign in with the TikTok account you want to post to.',
+            'Videos arrive in your TikTok inbox: open the notification in the TikTok app to edit and post them.',
+        ],
         connectUrl: tiktokRedirect.url(),
     },
     {
@@ -101,6 +128,10 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'profile',
         description: 'Publish video posts to your Threads profiles.',
         icon: AtSign,
+        requirements: [
+            'A Threads profile. Threads profiles are created from an Instagram account in the Threads app.',
+            'Sign in with the Instagram account behind your Threads profile.',
+        ],
         connectUrl: threadsRedirect.url(),
     },
     {
@@ -110,6 +141,10 @@ const platforms: PlatformInfo[] = [
         description:
             'Share videos on your LinkedIn profile. LinkedIn asks you to reconnect every 60 days.',
         icon: Linkedin,
+        requirements: [
+            'Posts go to your personal LinkedIn profile. Company Pages are not supported yet.',
+            "LinkedIn doesn't allow long-lived access: reconnect every 60 days when prompted.",
+        ],
         connectUrl: linkedinRedirect.url(),
     },
 ];
@@ -198,8 +233,13 @@ function PlatformCard({
                 )}
             </CardHeader>
 
-            {accounts.length > 0 && (
-                <CardContent>
+            <CardContent className="space-y-4">
+                <Requirements
+                    items={info.requirements}
+                    defaultOpen={accounts.length === 0}
+                />
+
+                {accounts.length > 0 && (
                     <ul className="divide-y rounded-lg border">
                         {accounts.map((account) => (
                             <AccountRow
@@ -210,9 +250,33 @@ function PlatformCard({
                             />
                         ))}
                     </ul>
-                </CardContent>
-            )}
+                )}
+            </CardContent>
         </Card>
+    );
+}
+
+function Requirements({
+    items,
+    defaultOpen,
+}: {
+    items: string[];
+    defaultOpen: boolean;
+}) {
+    return (
+        <Collapsible defaultOpen={defaultOpen}>
+            <CollapsibleTrigger className="group flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+                <ChevronDown className="size-4 transition-transform group-data-[state=closed]:-rotate-90" />
+                Before you connect
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                <ol className="mt-2 list-decimal space-y-1.5 pl-9 text-sm text-muted-foreground">
+                    {items.map((item) => (
+                        <li key={item}>{item}</li>
+                    ))}
+                </ol>
+            </CollapsibleContent>
+        </Collapsible>
     );
 }
 
