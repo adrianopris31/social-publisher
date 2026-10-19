@@ -7,12 +7,14 @@ use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 
-function videoAwaitingTranscode(): Video
+function videoAwaitingTranscode(int $width = 1080, int $height = 1920): Video
 {
     $video = Video::factory()->unprocessed()->create([
         'disk' => 'r2',
         'path' => 'videos/1/clip.mov',
         'mime_type' => 'video/quicktime',
+        'width' => $width,
+        'height' => $height,
     ]);
     Storage::disk('r2')->put($video->path, 'original bytes');
 
@@ -40,7 +42,30 @@ test('it replaces the original with the transcoded mp4 and marks the video ready
     Storage::disk('r2')->assertMissing('videos/1/clip.mov');
     expect(Storage::disk('r2')->get($video->path))->toBe('transcoded');
     Process::assertRan(fn (PendingProcess $process) => in_array('libx264', $process->command, true)
-        && in_array('aac', $process->command, true));
+        && in_array('aac', $process->command, true)
+        && ! in_array('-vf', $process->command, true));
+});
+
+test('it letterboxes a video that is not 9:16 onto a 1080x1920 canvas', function () {
+    Process::preventStrayProcesses();
+    Process::fake(['*ffmpeg*' => function (PendingProcess $process) {
+        file_put_contents((string) last($process->command), 'transcoded');
+
+        return Process::result();
+    }]);
+    $video = videoAwaitingTranscode(width: 656, height: 1376);
+
+    (new TranscodeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Ready)
+        ->width->toBe(1080)
+        ->height->toBe(1920);
+    Process::assertRan(function (PendingProcess $process) {
+        $filterIndex = array_search('-vf', $process->command, true);
+
+        return $filterIndex !== false && str_contains((string) $process->command[$filterIndex + 1], 'pad=1080:1920');
+    });
 });
 
 test('it keeps the original and throws when ffmpeg fails so the job is retried', function () {

@@ -103,14 +103,15 @@ class ProbeVideo implements ShouldQueue
     }
 
     /**
-     * Every platform accepts H.264 + AAC in an MP4 at up to 60 fps; anything else is converted first.
+     * Every platform accepts a 9:16 H.264 + AAC MP4 at up to 60 fps; anything else is converted first.
      */
     private function needsTranscoding(string $codec, ?string $audioCodec, float $frameRate): bool
     {
         return $this->video->mime_type !== 'video/mp4'
             || $codec !== 'h264'
             || ($audioCodec !== null && $audioCodec !== 'aac')
-            || $frameRate > 60.5;
+            || $frameRate > 60.5
+            || ! $this->video->isNineBySixteen();
     }
 
     /**

@@ -133,6 +133,7 @@ test('it queues a transcode instead of marking the video ready when platforms wo
         ['codec_type' => 'audio', 'codec_name' => 'opus'],
     ], 'video/mp4'],
     'quicktime container' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920]], 'video/quicktime'],
+    'not 9:16' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 656, 'height' => 1376]], 'video/mp4'],
     'above 60 fps' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920, 'avg_frame_rate' => '120/1']], 'video/mp4'],
 ]);
 

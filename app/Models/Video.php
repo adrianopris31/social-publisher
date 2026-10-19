@@ -69,6 +69,18 @@ class Video extends Model
     }
 
     /**
+     * Whether the video is 9:16 within a 1% tolerance. Facebook's Reels API rejects anything else.
+     */
+    public function isNineBySixteen(): bool
+    {
+        if ($this->width === null || $this->height === null || $this->height === 0) {
+            return false;
+        }
+
+        return abs($this->width / $this->height - 9 / 16) <= 0.01;
+    }
+
+    /**
      * Delete the stored file once the video row is gone.
      */
     protected static function booted(): void
