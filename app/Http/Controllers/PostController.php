@@ -169,6 +169,7 @@ class PostController extends Controller
                     'id' => $video->id,
                     'original_filename' => $video->original_filename,
                     'duration_ms' => $video->duration_ms,
+                    'size_bytes' => $video->size_bytes,
                     'created_at' => $video->created_at?->toIso8601String(),
                 ]),
             'accounts' => $user->socialAccounts()
@@ -184,12 +185,7 @@ class PostController extends Controller
                         && config('services.tiktok.direct_post')
                         && in_array('video.publish', $account->scopes ?? [], true),
                 ]),
-            'platforms' => collect(Platform::cases())->map(fn (Platform $platform): array => [
-                'value' => $platform,
-                'label' => $platform->label(),
-                'max_duration_ms' => $platform->maxDurationMs(),
-                'max_caption_length' => $platform->maxCaptionLength(),
-            ]),
+            'platforms' => collect(Platform::cases())->map(fn (Platform $platform): array => $platform->limits()),
             'privacyOptions' => StorePostRequest::PRIVACY_OPTIONS,
         ];
     }

@@ -212,6 +212,25 @@ describe('store', function () {
         'threads captions are capped at 500 characters' => [Platform::Threads, 30_000, str_repeat('a', 501), 'caption', 'Threads allows at most 500 characters.'],
     ]);
 
+    test('it rejects a video larger than the platform accepts', function (Platform $platform, bool $isRejected) {
+        $user = User::factory()->create();
+        $video = readyVideo($user);
+        $video->update(['size_bytes' => 300 * 1024 * 1024 + 1]);
+
+        $response = $this->actingAs($user)
+            ->post(route('posts.store'), [
+                'video_id' => $video->id,
+                'publications' => [['social_account_id' => composerAccount($user, $platform)->id]],
+            ]);
+
+        $isRejected
+            ? $response->assertSessionHasErrors(['publications.0.social_account_id' => 'Instagram accepts videos up to 300 MB.'])
+            : $response->assertSessionHasNoErrors();
+    })->with([
+        'instagram is capped at 300 MB' => [Platform::Instagram, true],
+        'youtube has no lower cap' => [Platform::YouTube, false],
+    ]);
+
     test('it ignores the caption length for tiktok inbox uploads', function () {
         $user = User::factory()->create();
 

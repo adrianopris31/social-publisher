@@ -29,7 +29,7 @@ import type { TikTokDirectSettings } from '@/components/tiktok-direct-post-field
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { formatDuration, platformIcons } from '@/lib/platforms';
+import { formatDuration, formatFileSize, platformIcons } from '@/lib/platforms';
 import { create, store, update } from '@/routes/posts';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import { create as createVideo } from '@/routes/videos';
@@ -39,6 +39,7 @@ type ComposerVideo = {
     id: number;
     original_filename: string;
     duration_ms: number | null;
+    size_bytes: number;
     created_at: string | null;
 };
 
@@ -55,6 +56,7 @@ type PlatformLimits = {
     value: Platform;
     label: string;
     max_duration_ms: number;
+    max_file_size_bytes: number | null;
     max_caption_length: number;
 };
 
@@ -167,6 +169,16 @@ export default function CreatePost({
         return (
             video?.duration_ms != null &&
             video.duration_ms > limitsByPlatform[platform].max_duration_ms
+        );
+    }
+
+    function tooLargeFor(platform: Platform): boolean {
+        const maxFileSizeBytes = limitsByPlatform[platform].max_file_size_bytes;
+
+        return (
+            video != null &&
+            maxFileSizeBytes !== null &&
+            video.size_bytes > maxFileSizeBytes
         );
     }
 
@@ -328,6 +340,7 @@ export default function CreatePost({
                                     account={account}
                                     limits={limitsByPlatform[account.platform]}
                                     isTooLong={tooLongFor(account.platform)}
+                                    isTooLarge={tooLargeFor(account.platform)}
                                     videoDurationMs={video?.duration_ms ?? null}
                                     publication={
                                         index >= 0
@@ -491,6 +504,7 @@ function AccountOption({
     account,
     limits,
     isTooLong,
+    isTooLarge,
     videoDurationMs,
     publication,
     errorPrefix,
@@ -505,6 +519,7 @@ function AccountOption({
     account: ComposerAccount;
     limits: PlatformLimits;
     isTooLong: boolean;
+    isTooLarge: boolean;
     videoDurationMs: number | null;
     publication: PublicationInput | null;
     errorPrefix: string;
@@ -517,7 +532,7 @@ function AccountOption({
     onChange: (changes: Partial<PublicationInput>) => void;
 }) {
     const Icon = platformIcons[account.platform];
-    const isDisabled = account.needs_reconnection || isTooLong;
+    const isDisabled = account.needs_reconnection || isTooLong || isTooLarge;
     const checkboxId = `account-${account.id}`;
     const effectiveCaption = publication?.caption || defaultCaption;
     const isTikTokDirect =
@@ -579,6 +594,14 @@ function AccountOption({
                         Max {formatDuration(limits.max_duration_ms)}
                     </span>
                 )}
+                {!account.needs_reconnection &&
+                    !isTooLong &&
+                    isTooLarge &&
+                    limits.max_file_size_bytes !== null && (
+                        <span className="text-xs text-muted-foreground">
+                            Max {formatFileSize(limits.max_file_size_bytes)}
+                        </span>
+                    )}
             </label>
             <div className="px-3">
                 <InputError

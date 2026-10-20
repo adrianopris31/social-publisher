@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Platform;
 use App\Enums\PublicationStatus;
 use App\Enums\VideoStatus;
 use App\Http\Requests\StoreVideoRequest;
@@ -46,6 +47,21 @@ class VideoController extends Controller
 
         return Inertia::render('videos/index', [
             'videos' => $videos,
+        ]);
+    }
+
+    /**
+     * Show the upload form with the limits every video must meet.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('videos/create', [
+            'limits' => [
+                'max_file_size_bytes' => StoreVideoUploadRequest::MAX_SIZE_BYTES,
+                'min_duration_ms' => ProbeVideo::MIN_DURATION_MS,
+                'max_duration_ms' => Platform::longestMaxDurationMs(),
+                'platforms' => array_map(fn (Platform $platform): array => $platform->limits(), Platform::cases()),
+            ],
         ]);
     }
 

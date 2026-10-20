@@ -42,6 +42,41 @@ enum Platform: string
     }
 
     /**
+     * Largest file the platform accepts, or null when it documents no limit below our 500 MB upload cap.
+     */
+    public function maxFileSizeBytes(): ?int
+    {
+        return match ($this) {
+            self::Instagram => 300 * 1024 * 1024,
+            self::Facebook, self::YouTube, self::TikTok, self::Threads, self::LinkedIn => null,
+        };
+    }
+
+    /**
+     * Longest video any platform accepts; each platform's own limit is checked when posting.
+     */
+    public static function longestMaxDurationMs(): int
+    {
+        return max(array_map(fn (self $platform): int => $platform->maxDurationMs(), self::cases()));
+    }
+
+    /**
+     * The limits the upload page and the composer show for the platform.
+     *
+     * @return array{value: self, label: string, max_duration_ms: int, max_file_size_bytes: int|null, max_caption_length: int}
+     */
+    public function limits(): array
+    {
+        return [
+            'value' => $this,
+            'label' => $this->label(),
+            'max_duration_ms' => $this->maxDurationMs(),
+            'max_file_size_bytes' => $this->maxFileSizeBytes(),
+            'max_caption_length' => $this->maxCaptionLength(),
+        ];
+    }
+
+    /**
      * Longest caption or description the platform accepts.
      */
     public function maxCaptionLength(): int

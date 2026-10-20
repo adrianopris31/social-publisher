@@ -22,7 +22,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('videos', [VideoController::class, 'index'])->name('videos.index');
-    Route::inertia('videos/create', 'videos/create')->name('videos.create');
+    Route::get('videos/create', [VideoController::class, 'create'])->name('videos.create');
     Route::delete('videos/{video}', [VideoController::class, 'destroy'])
         ->can('delete', 'video')
         ->name('videos.destroy');

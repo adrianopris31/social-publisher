@@ -29,7 +29,7 @@ class ProbeVideo implements ShouldQueue
 
     private const float MAX_ASPECT_RATIO = 0.6;
 
-    private const int MIN_DURATION_MS = 3_000;
+    public const int MIN_DURATION_MS = 3_000;
 
     /**
      * Create a new job instance.
@@ -152,7 +152,7 @@ class ProbeVideo implements ShouldQueue
             return 'Aspect ratio must be close to 9:16.';
         }
 
-        $maxDurationMs = $this->maxDurationMs();
+        $maxDurationMs = Platform::longestMaxDurationMs();
 
         if ($durationMs < self::MIN_DURATION_MS || $durationMs > $maxDurationMs) {
             $maxMinutes = intdiv($maxDurationMs, 60_000);
@@ -161,14 +161,6 @@ class ProbeVideo implements ShouldQueue
         }
 
         return null;
-    }
-
-    /**
-     * The longest video any platform accepts; the composer enforces each platform's own limit.
-     */
-    private function maxDurationMs(): int
-    {
-        return max(array_map(fn (Platform $platform): int => $platform->maxDurationMs(), Platform::cases()));
     }
 
     /**

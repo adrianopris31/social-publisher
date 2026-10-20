@@ -7,6 +7,11 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    formatDurationLimit,
+    formatFileSize,
+    platformIcons,
+} from '@/lib/platforms';
 import { uploadToPresignedUrl } from '@/lib/upload-to-presigned-url';
 import type { PresignedUpload } from '@/lib/upload-to-presigned-url';
 import {
@@ -15,6 +20,21 @@ import {
     store as storeVideo,
 } from '@/routes/videos';
 import { store as storeUpload } from '@/routes/videos/uploads';
+import type { Platform } from '@/types';
+
+type PlatformLimits = {
+    value: Platform;
+    label: string;
+    max_duration_ms: number;
+    max_file_size_bytes: number | null;
+};
+
+type UploadLimits = {
+    max_file_size_bytes: number;
+    min_duration_ms: number;
+    max_duration_ms: number;
+    platforms: PlatformLimits[];
+};
 
 type UploadTicketForm = {
     filename: string;
@@ -49,7 +69,7 @@ const statusLabels: Record<UploadStatus, string> = {
     failed: 'Try again',
 };
 
-export default function CreateVideo() {
+export default function CreateVideo({ limits }: { limits: UploadLimits }) {
     const [file, setFile] = useState<File | null>(null);
     const [status, setStatus] = useState<UploadStatus>('idle');
     const [progress, setProgress] = useState(0);
@@ -79,6 +99,12 @@ export default function CreateVideo() {
         setUploadError(null);
         ticket.clearErrors();
         confirmation.clearErrors();
+
+        if (selected && selected.size > limits.max_file_size_bytes) {
+            setUploadError(
+                `This file is ${formatFileSize(selected.size)}. Videos can be up to ${formatFileSize(limits.max_file_size_bytes)}.`,
+            );
+        }
 
         if (selected) {
             ticket.setData({
@@ -140,7 +166,7 @@ export default function CreateVideo() {
             <div className="flex max-w-xl flex-col gap-6 p-4">
                 <Heading
                     title="Upload video"
-                    description="Vertical MP4 or MOV, up to 500 MB."
+                    description={`Vertical MP4 or MOV, up to ${formatFileSize(limits.max_file_size_bytes)} and ${formatDurationLimit(limits.min_duration_ms)} to ${formatDurationLimit(limits.max_duration_ms)} long.`}
                 />
 
                 <div className="grid gap-2">
@@ -180,12 +206,89 @@ export default function CreateVideo() {
                 )}
 
                 <div>
-                    <Button onClick={upload} disabled={!file || isBusy}>
+                    <Button
+                        onClick={upload}
+                        disabled={
+                            !file ||
+                            isBusy ||
+                            file.size > limits.max_file_size_bytes
+                        }
+                    >
                         {statusLabels[status]}
                     </Button>
                 </div>
+
+                <PlatformLimitsTable
+                    platforms={limits.platforms}
+                    maxFileSizeBytes={limits.max_file_size_bytes}
+                />
             </div>
         </>
+    );
+}
+
+function PlatformLimitsTable({
+    platforms,
+    maxFileSizeBytes,
+}: {
+    platforms: PlatformLimits[];
+    maxFileSizeBytes: number;
+}) {
+    return (
+        <div className="grid gap-2">
+            <h3 className="text-sm font-medium">Limits per platform</h3>
+            <p className="text-sm text-muted-foreground">
+                A video longer or larger than a platform allows can still be
+                uploaded, but it can't be posted to that platform.
+            </p>
+            <div className="overflow-hidden rounded-lg border">
+                <table className="w-full text-sm">
+                    <thead className="bg-muted/50 text-left text-muted-foreground">
+                        <tr>
+                            <th className="px-3 py-2 font-medium">Platform</th>
+                            <th className="px-3 py-2 font-medium">
+                                Max length
+                            </th>
+                            <th className="px-3 py-2 font-medium">Max size</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {platforms.map((platform) => {
+                            const Icon = platformIcons[platform.value];
+
+                            return (
+                                <tr key={platform.value} className="border-t">
+                                    <td className="px-3 py-2">
+                                        <span className="flex items-center gap-2">
+                                            <Icon className="size-4 text-muted-foreground" />
+                                            {platform.label}
+                                        </span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                        {formatDurationLimit(
+                                            platform.max_duration_ms,
+                                        )}
+                                    </td>
+                                    <td className="px-3 py-2">
+                                        {formatFileSize(
+                                            Math.min(
+                                                platform.max_file_size_bytes ??
+                                                    maxFileSizeBytes,
+                                                maxFileSizeBytes,
+                                            ),
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            <p className="text-xs text-muted-foreground">
+                TikTok may allow less than 10 min for some accounts; the
+                composer shows each account's own limit.
+            </p>
+        </div>
     );
 }
 

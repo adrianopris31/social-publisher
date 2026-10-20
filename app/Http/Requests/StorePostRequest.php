@@ -176,6 +176,13 @@ class StorePostRequest extends FormRequest
             $seconds = intdiv($platform->maxDurationMs(), 1000);
             $validator->errors()->add("{$field}.social_account_id", "{$platform->label()} accepts videos up to {$seconds} seconds.");
         }
+
+        $maxFileSizeBytes = $platform->maxFileSizeBytes();
+
+        if ($maxFileSizeBytes !== null && $video->size_bytes > $maxFileSizeBytes) {
+            $megabytes = intdiv($maxFileSizeBytes, 1024 * 1024);
+            $validator->errors()->add("{$field}.social_account_id", "{$platform->label()} accepts videos up to {$megabytes} MB.");
+        }
     }
 
     /**
