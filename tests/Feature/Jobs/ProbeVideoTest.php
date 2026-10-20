@@ -81,9 +81,22 @@ test('it rejects an invalid video and deletes its file', function (string $outpu
     'unsupported codec' => [ffprobeOutput('vp9', 1080, 1920, '30.000000'), 'Unsupported codec: vp9.'],
     'horizontal' => [ffprobeOutput('h264', 1920, 1080, '30.000000'), 'Video must be vertical.'],
     'too narrow for 9:16' => [ffprobeOutput('h264', 600, 1920, '30.000000'), 'Aspect ratio must be close to 9:16.'],
-    'too short' => [ffprobeOutput('h264', 1080, 1920, '2.999000'), 'Duration must be between 3 and 180 seconds.'],
-    'too long' => [ffprobeOutput('h264', 1080, 1920, '180.001000'), 'Duration must be between 3 and 180 seconds.'],
+    'too short' => [ffprobeOutput('h264', 1080, 1920, '2.999000'), 'Duration must be between 3 seconds and 15 minutes.'],
+    'longer than every platform allows' => [ffprobeOutput('h264', 1080, 1920, '900.001000'), 'Duration must be between 3 seconds and 15 minutes.'],
 ]);
+
+test('it accepts a video longer than one platform allows, leaving the per-platform limit to the composer', function () {
+    Storage::fake('r2');
+    Process::preventStrayProcesses();
+    Process::fake(['*ffprobe*' => Process::result(output: ffprobeOutput('h264', 1080, 1920, '240.000000'))]);
+    $video = storedUnprocessedVideo();
+
+    (new ProbeVideo($video))->handle();
+
+    expect($video->fresh())
+        ->status->toBe(VideoStatus::Ready)
+        ->duration_ms->toBe(240_000);
+});
 
 test('it throws when ffprobe fails so the job is retried', function () {
     Storage::fake('r2');
@@ -134,6 +147,7 @@ test('it queues a transcode instead of marking the video ready when platforms wo
     ], 'video/mp4'],
     'quicktime container' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920]], 'video/quicktime'],
     'not 9:16' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 656, 'height' => 1376]], 'video/mp4'],
+    'wider than instagram accepts' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 2160, 'height' => 3840]], 'video/mp4'],
     'above 60 fps' => [[['codec_type' => 'video', 'codec_name' => 'h264', 'width' => 1080, 'height' => 1920, 'avg_frame_rate' => '120/1']], 'video/mp4'],
 ]);
 

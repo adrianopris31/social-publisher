@@ -36,6 +36,9 @@ class Video extends Model
     /** @use HasFactory<VideoFactory> */
     use HasFactory, Prunable;
 
+    /** Widest video Instagram accepts. */
+    public const int MAX_WIDTH = 1920;
+
     /**
      * Get the attributes that should be cast.
      *
@@ -78,6 +81,15 @@ class Video extends Model
         }
 
         return abs($this->width / $this->height - 9 / 16) <= 0.01;
+    }
+
+    /**
+     * Whether the video must be scaled onto the 1080x1920 canvas: it isn't 9:16,
+     * or it is wider than Instagram accepts (e.g. 4K vertical).
+     */
+    public function needsResizing(): bool
+    {
+        return ! $this->isNineBySixteen() || $this->width > self::MAX_WIDTH;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\Platform;
 use App\Enums\VideoStatus;
 use App\Models\Video;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,9 +30,6 @@ class ProbeVideo implements ShouldQueue
     private const float MAX_ASPECT_RATIO = 0.6;
 
     private const int MIN_DURATION_MS = 3_000;
-
-    /** YouTube Shorts limit; refine per platform later. */
-    private const int MAX_DURATION_MS = 180_000;
 
     /**
      * Create a new job instance.
@@ -111,7 +109,7 @@ class ProbeVideo implements ShouldQueue
             || $codec !== 'h264'
             || ($audioCodec !== null && $audioCodec !== 'aac')
             || $frameRate > 60.5
-            || ! $this->video->isNineBySixteen();
+            || $this->video->needsResizing();
     }
 
     /**
@@ -154,11 +152,23 @@ class ProbeVideo implements ShouldQueue
             return 'Aspect ratio must be close to 9:16.';
         }
 
-        if ($durationMs < self::MIN_DURATION_MS || $durationMs > self::MAX_DURATION_MS) {
-            return 'Duration must be between 3 and 180 seconds.';
+        $maxDurationMs = $this->maxDurationMs();
+
+        if ($durationMs < self::MIN_DURATION_MS || $durationMs > $maxDurationMs) {
+            $maxMinutes = intdiv($maxDurationMs, 60_000);
+
+            return "Duration must be between 3 seconds and {$maxMinutes} minutes.";
         }
 
         return null;
+    }
+
+    /**
+     * The longest video any platform accepts; the composer enforces each platform's own limit.
+     */
+    private function maxDurationMs(): int
+    {
+        return max(array_map(fn (Platform $platform): int => $platform->maxDurationMs(), Platform::cases()));
     }
 
     /**

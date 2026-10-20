@@ -20,7 +20,7 @@ use Throwable;
 
 /**
  * Convert a probed video to H.264 + AAC MP4 (max 60 fps, fast start), the format every platform accepts,
- * letterboxing it onto a 1080x1920 canvas when it isn't 9:16, then replace the original file in storage
+ * scaling it onto a 1080x1920 canvas when it isn't 9:16 or is too wide (black bars fill the rest), then replace the original file in storage
  * and mark the video ready.
  */
 #[Queue('uploads')]
@@ -45,7 +45,7 @@ class TranscodeVideo implements ShouldQueue
         $directory = storage_path('app/transcode');
         File::ensureDirectoryExists($directory);
         $output = $directory.'/'.Str::uuid().'.mp4';
-        $letterbox = ! $this->video->isNineBySixteen();
+        $letterbox = $this->video->needsResizing();
 
         try {
             $result = Process::timeout(880)->run([

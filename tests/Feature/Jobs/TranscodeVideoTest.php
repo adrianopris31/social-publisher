@@ -46,14 +46,14 @@ test('it replaces the original with the transcoded mp4 and marks the video ready
         && ! in_array('-vf', $process->command, true));
 });
 
-test('it letterboxes a video that is not 9:16 onto a 1080x1920 canvas', function () {
+test('it scales a video onto a 1080x1920 canvas when it is not 9:16 or too wide', function (int $width, int $height) {
     Process::preventStrayProcesses();
     Process::fake(['*ffmpeg*' => function (PendingProcess $process) {
         file_put_contents((string) last($process->command), 'transcoded');
 
         return Process::result();
     }]);
-    $video = videoAwaitingTranscode(width: 656, height: 1376);
+    $video = videoAwaitingTranscode($width, $height);
 
     (new TranscodeVideo($video))->handle();
 
@@ -66,7 +66,10 @@ test('it letterboxes a video that is not 9:16 onto a 1080x1920 canvas', function
 
         return $filterIndex !== false && str_contains((string) $process->command[$filterIndex + 1], 'pad=1080:1920');
     });
-});
+})->with([
+    'not 9:16' => [656, 1376],
+    '4k vertical' => [2160, 3840],
+]);
 
 test('it keeps the original and throws when ffmpeg fails so the job is retried', function () {
     Process::preventStrayProcesses();
