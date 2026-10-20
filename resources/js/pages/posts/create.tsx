@@ -112,7 +112,7 @@ function newPublication(account: ComposerAccount): PublicationInput {
                 : account.platform === 'instagram'
                   ? { share_to_feed: true }
                   : account.platform === 'tiktok'
-                    ? { mode: 'inbox' }
+                    ? { mode: account.can_direct_post ? 'direct' : 'inbox' }
                     : {},
     };
 }

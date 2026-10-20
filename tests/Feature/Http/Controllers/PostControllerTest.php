@@ -57,6 +57,26 @@ describe('index', function () {
                 ->missing('posts.data.0.publications.0.account.access_token')
             );
     });
+
+    test('it flags TikTok publications that were sent to the inbox', function (Platform $platform, ?string $mode, bool $isTikTokInbox) {
+        $user = User::factory()->create();
+        $post = Post::factory()->for($user)->create();
+        Publication::factory()->for($post)->published()->create([
+            'social_account_id' => composerAccount($user, $platform)->id,
+            'platform' => $platform,
+            'settings' => $mode === null ? null : ['mode' => $mode],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('posts.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('posts.data.0.publications.0.is_tiktok_inbox', $isTikTokInbox)
+            );
+    })->with([
+        'tiktok inbox' => [Platform::TikTok, 'inbox', true],
+        'tiktok direct post' => [Platform::TikTok, 'direct', false],
+        'youtube' => [Platform::YouTube, null, false],
+    ]);
 });
 
 describe('create', function () {

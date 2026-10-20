@@ -27,6 +27,8 @@ export type Publication = {
     caption: string | null;
     privacy: string | null;
     status: PublicationStatus;
+    /** A TikTok upload the creator finishes in the TikTok app. */
+    is_tiktok_inbox: boolean;
     external_url: string | null;
     error_message: string | null;
     published_at: string | null;

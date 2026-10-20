@@ -30,6 +30,7 @@ class SocialAccountController extends Controller
 
         return Inertia::render('social-accounts/index', [
             'accounts' => $accounts,
+            'tiktokDirectPost' => (bool) config('services.tiktok.direct_post'),
         ]);
     }
 

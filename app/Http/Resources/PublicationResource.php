@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\Platform;
 use App\Models\Publication;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -30,6 +31,7 @@ class PublicationResource extends JsonResource
             'caption' => $this->caption,
             'privacy' => $this->privacy,
             'status' => $this->status,
+            'is_tiktok_inbox' => $this->platform === Platform::TikTok && data_get($this->settings, 'mode') !== 'direct',
             'external_url' => $this->external_url,
             'error_message' => $this->error_message,
             'published_at' => $this->published_at?->toIso8601String(),

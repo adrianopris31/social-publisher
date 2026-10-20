@@ -65,6 +65,8 @@ type PlatformInfo = {
     requirements: string[];
     /** OAuth start URL; null until the integration exists. */
     connectUrl: string | null;
+    /** Replaces the description and requirements when direct posting is enabled. */
+    directPost?: Pick<PlatformInfo, 'description' | 'requirements'>;
 };
 
 const platforms: PlatformInfo[] = [
@@ -120,6 +122,15 @@ const platforms: PlatformInfo[] = [
             'Sign in with the TikTok account you want to post to.',
             'Videos arrive in your TikTok inbox: open the notification in the TikTok app to edit and post them.',
         ],
+        directPost: {
+            description:
+                'Post videos straight to your TikTok profile, or send them to your inbox to finish in the app.',
+            requirements: [
+                'Sign in with the TikTok account you want to post to, and allow posting when TikTok asks.',
+                'Pick "Post directly" in the composer to set the caption and who can view the video here.',
+                'Pick "Send to inbox" to edit and post the video from the TikTok app instead.',
+            ],
+        },
         connectUrl: tiktokRedirect.url(),
     },
     {
@@ -163,8 +174,11 @@ function initials(name: string): string {
 
 export default function SocialAccountsIndex({
     accounts,
+    tiktokDirectPost,
 }: {
     accounts: SocialAccount[];
+    /** Whether the TikTok app may post directly to profiles. */
+    tiktokDirectPost: boolean;
 }) {
     return (
         <>
@@ -180,7 +194,13 @@ export default function SocialAccountsIndex({
                     {platforms.map((info) => (
                         <PlatformCard
                             key={info.platform}
-                            info={info}
+                            info={
+                                info.platform === 'tiktok' &&
+                                tiktokDirectPost &&
+                                info.directPost
+                                    ? { ...info, ...info.directPost }
+                                    : info
+                            }
                             accounts={accounts.filter(
                                 (account) => account.platform === info.platform,
                             )}

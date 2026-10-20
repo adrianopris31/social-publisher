@@ -161,7 +161,7 @@ function PublicationRow({
             <div className="flex items-center gap-2">
                 <PublicationStatusBadge
                     status={publication.status}
-                    platform={publication.platform}
+                    isTikTokInbox={publication.is_tiktok_inbox}
                     isScheduled={isScheduled}
                 />
 

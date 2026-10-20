@@ -35,6 +35,17 @@ test('it lists only the social accounts of the user without their tokens', funct
         );
 });
 
+test('it tells the page whether TikTok direct posting is enabled', function (bool $isEnabled) {
+    config(['services.tiktok.direct_post' => $isEnabled]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('social-accounts.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('tiktokDirectPost', $isEnabled));
+})->with([
+    'enabled' => true,
+    'disabled' => false,
+]);
+
 test('the owner can disconnect a social account', function () {
     Http::fake();
     $account = SocialAccount::factory()->create();

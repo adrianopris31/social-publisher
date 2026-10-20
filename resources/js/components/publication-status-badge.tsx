@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Platform, PublicationStatus } from '@/types';
+import type { PublicationStatus } from '@/types';
 
 const labels: Record<PublicationStatus, string> = {
     pending: 'Queued',
@@ -19,11 +19,12 @@ const labels: Record<PublicationStatus, string> = {
 
 export function PublicationStatusBadge({
     status,
-    platform,
+    isTikTokInbox = false,
     isScheduled = false,
 }: {
     status: PublicationStatus;
-    platform: Platform;
+    /** Published means "sent to the inbox" for TikTok inbox uploads. */
+    isTikTokInbox?: boolean;
     /** A pending publication of a post that waits for its publish time. */
     isScheduled?: boolean;
 }) {
@@ -40,7 +41,7 @@ export function PublicationStatusBadge({
         return (
             <Badge className="border-transparent bg-green-600/10 text-green-700 dark:bg-green-400/10 dark:text-green-400">
                 <CheckCircle2 />
-                {platform === 'tiktok' ? 'In TikTok inbox' : labels.published}
+                {isTikTokInbox ? 'Sent to TikTok inbox' : labels.published}
             </Badge>
         );
     }
