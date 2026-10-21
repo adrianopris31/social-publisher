@@ -3,7 +3,7 @@ import { CalendarClock, Layers, Upload } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Button } from '@/components/ui/button';
 import { platformIcons, platformNames } from '@/lib/platforms';
-import { dashboard, login, privacy, register, terms } from '@/routes';
+import { cookies, dashboard, login, privacy, register, terms } from '@/routes';
 import type { Platform } from '@/types';
 
 const platforms: Platform[] = [
@@ -130,6 +130,12 @@ export default function Welcome() {
                                 className="hover:text-foreground"
                             >
                                 Terms of Service
+                            </Link>
+                            <Link
+                                href={cookies()}
+                                className="hover:text-foreground"
+                            >
+                                Cookie Policy
                             </Link>
                         </nav>
                     </div>

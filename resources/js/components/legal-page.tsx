@@ -1,10 +1,16 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import { home, privacy, terms } from '@/routes';
+import { cookies, home, privacy, terms } from '@/routes';
 
-/** Replace with the real contact address before submitting app reviews. */
-export const CONTACT_EMAIL = 'privacy@example.com';
+export const CONTACT_EMAIL = 'office@istorm.ro';
+
+/** The legal entity that operates the app (data controller under GDPR). */
+export const COMPANY = {
+    name: 'SC ISTORM SRL',
+    taxId: 'RO13256672',
+    address: 'str. Alunis nr. 4, Targu Mures, jud. Mures, Romania',
+};
 
 export function LegalPage({
     title,
@@ -42,6 +48,12 @@ export function LegalPage({
                                 className="hover:text-foreground"
                             >
                                 Terms
+                            </Link>
+                            <Link
+                                href={cookies()}
+                                className="hover:text-foreground"
+                            >
+                                Cookies
                             </Link>
                         </nav>
                     </div>
