@@ -1,5 +1,10 @@
 # Social Publisher
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/logo-horizontal-dark.svg">
+  <img src="public/logo-horizontal-light.svg" alt="Social Publisher" height="48">
+</picture>
+
 Upload one vertical video once, customise the caption per platform, and publish it now or on a schedule to **YouTube Shorts, Instagram Reels, Facebook Reels, TikTok, Threads and LinkedIn**.
 
 Built for individual creators: every user owns their own videos, posts and connected accounts, and can connect several accounts per platform.
