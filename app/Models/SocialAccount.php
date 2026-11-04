@@ -52,6 +52,14 @@ class SocialAccount extends Model
     }
 
     /**
+     * Whether this Instagram account connected directly, with a 60-day Instagram token, instead of through a Facebook Page.
+     */
+    public function usesInstagramLogin(): bool
+    {
+        return in_array('instagram_business_content_publish', $this->scopes ?? [], true);
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo

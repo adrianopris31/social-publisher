@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Actions\Instagram\RefreshInstagramAccessToken;
 use App\Actions\LinkedIn\RefreshLinkedInAccessToken;
 use App\Actions\Threads\RefreshThreadsAccessToken;
 use App\Actions\TikTok\RefreshTikTokAccessToken;
@@ -19,6 +20,7 @@ class EnsureFreshAccessToken
         private RefreshTikTokAccessToken $refreshTikTok,
         private RefreshThreadsAccessToken $refreshThreads,
         private RefreshLinkedInAccessToken $refreshLinkedIn,
+        private RefreshInstagramAccessToken $refreshInstagram,
     ) {}
 
     /**
@@ -40,8 +42,9 @@ class EnsureFreshAccessToken
                 Platform::TikTok => $this->refreshTikTok->handle($account),
                 Platform::Threads => $this->refreshThreads->handle($account),
                 Platform::LinkedIn => $this->refreshLinkedIn->handle($account),
+                Platform::Instagram => $this->refreshInstagram->handle($account),
                 // Page tokens derived from a long-lived user token do not expire.
-                Platform::Instagram, Platform::Facebook => $account,
+                Platform::Facebook => $account,
             };
         });
     }

@@ -43,6 +43,18 @@ class SocialAccountFactory extends Factory
     }
 
     /**
+     * Indicate that the Instagram account connected directly, with a 60-day token and no Facebook Page.
+     */
+    public function instagramLogin(): static
+    {
+        return $this->forPlatform(Platform::Instagram)->state(fn (array $attributes) => [
+            'refresh_token' => null,
+            'token_expires_at' => now()->addDays(60),
+            'scopes' => ['instagram_business_basic', 'instagram_business_content_publish'],
+        ]);
+    }
+
+    /**
      * Indicate that the account's access token has expired.
      */
     public function expired(): static

@@ -90,3 +90,28 @@ test('it maps graph api errors to the matching exception', function (array $erro
     'rate limited' => [['code' => 4, 'message' => 'Too many calls'], 400, RequestException::class],
     'invalid video' => [['code' => 100, 'message' => 'Invalid parameter'], 400, PublishingFailedException::class],
 ]);
+
+test('accounts connected with instagram login publish through graph.instagram.com without an app secret proof', function () {
+    Http::fake([
+        'graph.instagram.com/*/ig-2/media?*' => Http::response(['id' => 'container-2']),
+        'graph.instagram.com/*/container-2?*' => Http::response(['status_code' => 'FINISHED']),
+        'graph.instagram.com/*/ig-2/media_publish?*' => Http::response(['id' => 'media-2']),
+        'graph.instagram.com/*/media-2?*' => Http::response(['permalink' => 'https://www.instagram.com/reel/xyz/']),
+    ]);
+    $account = SocialAccount::factory()->instagramLogin()->create(['external_id' => 'ig-2', 'access_token' => 'ig-token']);
+    $post = Post::factory()->for($account->user)->create();
+    $publication = Publication::factory()->for($post)->for($account)->create();
+    $publisher = app(InstagramPublisher::class);
+
+    $started = $publisher->publish($publication, $account, $post->video);
+    $publication->update($started->toAttributes());
+    $finished = $publisher->checkStatus($publication, $account);
+
+    expect($finished)
+        ->status->toBe(PublicationStatus::Published)
+        ->externalId->toBe('media-2')
+        ->externalUrl->toBe('https://www.instagram.com/reel/xyz/');
+    Http::assertSentCount(4);
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), 'access_token=ig-token')
+        && ! str_contains($request->url(), 'appsecret_proof'));
+});

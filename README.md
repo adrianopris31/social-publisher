@@ -33,7 +33,7 @@ Built for individual creators: every user owns their own videos, posts and conne
 | Area | Features |
 |---|---|
 | **Video library** | Direct browser → Cloudflare R2 upload (presigned URL, never through PHP), max 500 MB. Automatic ffprobe check (codec, vertical 9:16, 3–180 s). Automatic transcoding to H.264/AAC MP4 when needed. Videos are reusable across posts. |
-| **Connected accounts** | OAuth for YouTube (Google), TikTok, Facebook Pages + Instagram professional accounts (one Facebook Login), Threads, LinkedIn. Tokens are stored encrypted and refreshed automatically. Expired or revoked access shows a **Reconnect** button. Disconnecting revokes the token where the platform supports it. |
+| **Connected accounts** | OAuth for YouTube (Google), TikTok, Facebook Pages + Instagram professional accounts (one Facebook Login), Instagram professional accounts without a Page (Instagram Login), Threads, LinkedIn. Tokens are stored encrypted and refreshed automatically. Expired or revoked access shows a **Reconnect** button. Disconnecting revokes the token where the platform supports it. |
 | **Composer** | Pick a ready video, pick target accounts, write one caption plus per-platform overrides (YouTube title, per-platform length limits). TikTok inbox or direct post (with the full audit UX). Publish now or schedule with a timezone. |
 | **Limits** | Per-account daily caps (rolling 24 h) checked in the composer, so posts are refused up front instead of failing on the platform. Per-platform duration and caption limits. |
 | **Publishing** | One queued job per target account, so one failure never blocks the others. Retries with backoff, status polling while the platform processes the video, clear error messages, manual **Retry**. |
@@ -119,7 +119,7 @@ Retries: transient errors (5xx, rate limits) back off and retry. Permanent error
 | Platform | Connect | How it publishes | Video | Caption | Daily cap (default) | Token |
 |---|---|---|---|---|---|---|
 | **YouTube Shorts** | Google OAuth (`youtube.upload`, `youtube.readonly`) | Resumable upload to `videos.insert`, then poll `uploadStatus` | ≤ 180 s | 5000 (+ title) | 6 (project quota: ~1600 units/upload of 10,000/day) | Refresh token |
-| **Instagram Reels** | Facebook Login → linked IG professional account | `REELS` container from URL → poll → `media_publish` | ≤ 900 s | 2200 | 50 | Page token, no expiry |
+| **Instagram Reels** | Instagram Login, or Facebook Login → linked IG professional account | `REELS` container from URL → poll → `media_publish` | ≤ 900 s | 2200 | 50 | Instagram Login: 60 days, refreshed before publishing. Facebook Login: Page token, no expiry |
 | **Facebook Reels** | Facebook Login → Page | `video_reels` start → upload by `file_url` → finish → poll | ≤ 90 s | 5000 | 30 | Page token, no expiry |
 | **TikTok** | TikTok Login Kit (`user.info.basic`, `video.upload`, + `video.publish` for direct) | `FILE_UPLOAD` in 10 MB chunks; **inbox** (draft) or **direct** post; poll status | ≤ 600 s (or the creator's own max) | 2200 (direct only) | 5 | Rotating refresh token |
 | **Threads** | Threads OAuth (`threads_basic`, `threads_content_publish`) | Video container from URL → poll → publish | ≤ 300 s | 500 | 200 | Long-lived, refreshed |
@@ -196,6 +196,7 @@ Set `APP_URL` and every `*_REDIRECT_URI` to the ngrok domain, and register the s
 | `TIKTOK_CLIENT_ID/SECRET/REDIRECT_URI` | TikTok |
 | `TIKTOK_DIRECT_POST` | `true` asks for `video.publish` and enables direct post in the composer |
 | `FACEBOOK_CLIENT_ID/SECRET/REDIRECT_URI`, `FACEBOOK_GRAPH_VERSION` | Facebook Pages + Instagram |
+| `INSTAGRAM_CLIENT_ID/SECRET/REDIRECT_URI` | Instagram Login (no Facebook Page) |
 | `THREADS_CLIENT_ID/SECRET/REDIRECT_URI` | Threads |
 | `LINKEDIN_CLIENT_ID/SECRET/REDIRECT_URI`, `LINKEDIN_API_VERSION` | LinkedIn (`YYYYMM` version header) |
 | `PUBLISHING_LIMIT_<PLATFORM>` | Override the daily caps in `config/publishing.php` |
@@ -220,6 +221,13 @@ Redirect URI pattern: `https://<public-domain>/auth/<provider>/callback`.
 3. Redirect URI `/auth/tiktok/callback` (HTTPS). Verify the domain/URL prefix if TikTok asks.
 4. Sandbox: add your TikTok account as a **target user**. For direct post tests, make that account **private**.
 5. After changing scopes, **disconnect and reconnect** the account in the app.
+
+### Instagram Login, no Facebook Page (developers.facebook.com)
+
+1. In the Meta app, open **Instagram > API setup with Instagram business login** and copy the Instagram App ID and Secret (they differ from the Facebook ones).
+2. Add the redirect URI `/auth/instagram/callback`.
+3. Permissions: `instagram_business_basic`, `instagram_business_content_publish`.
+4. In development, add the Business or Creator account as an Instagram Tester and accept the invitation in Instagram.
 
 ### Facebook + Instagram (developers.facebook.com)
 1. Create a **Business** app and add **Facebook Login for Business** (or Facebook Login) with redirect `/auth/facebook/callback`.

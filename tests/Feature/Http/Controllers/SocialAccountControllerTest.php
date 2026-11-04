@@ -28,6 +28,7 @@ test('it lists only the social accounts of the user without their tokens', funct
                 ->where('display_name', 'My Shorts Channel')
                 ->where('avatar_url', $account->avatar_url)
                 ->where('needs_reconnection', false)
+                ->where('uses_instagram_login', false)
                 ->has('connected_at')
                 ->missing('access_token')
                 ->missing('refresh_token')

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InstagramConnectionController;
 use App\Http\Controllers\LinkedInConnectionController;
 use App\Http\Controllers\MetaConnectionController;
 use App\Http\Controllers\PostController;
@@ -60,6 +61,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('auth/facebook/redirect', [MetaConnectionController::class, 'redirect'])->name('meta.redirect');
     Route::get('auth/facebook/callback', [MetaConnectionController::class, 'callback'])->name('meta.callback');
+
+    Route::get('auth/instagram/redirect', [InstagramConnectionController::class, 'redirect'])->name('instagram.redirect');
+    Route::get('auth/instagram/callback', [InstagramConnectionController::class, 'callback'])->name('instagram.callback');
 
     Route::get('auth/threads/redirect', [ThreadsConnectionController::class, 'redirect'])->name('threads.redirect');
     Route::get('auth/threads/callback', [ThreadsConnectionController::class, 'callback'])->name('threads.callback');

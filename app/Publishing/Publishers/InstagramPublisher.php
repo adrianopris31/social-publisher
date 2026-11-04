@@ -9,11 +9,13 @@ use App\Models\Video;
 use App\Publishing\MetaGraph;
 use App\Publishing\Publisher;
 use App\Publishing\PublishResult;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Storage;
 
 /**
  * Instagram Reels via the Graph API: create a REELS container from a URL Instagram downloads,
- * wait until the container is FINISHED, then publish it.
+ * wait until the container is FINISHED, then publish it. Accounts connected with Instagram Login
+ * use graph.instagram.com, accounts connected through a Facebook Page use graph.facebook.com.
  */
 class InstagramPublisher implements Publisher
 {
@@ -21,9 +23,9 @@ class InstagramPublisher implements Publisher
     {
         $videoUrl = Storage::disk($video->disk)->temporaryUrl($video->path, now()->addHours(2));
 
-        $response = MetaGraph::request($account->access_token)
+        $response = $this->request($account)
             ->asForm()
-            ->post(MetaGraph::url("{$account->external_id}/media"), [
+            ->post($this->url($account, "{$account->external_id}/media"), [
                 'media_type' => 'REELS',
                 'video_url' => $videoUrl,
                 'caption' => (string) ($publication->caption ?? ''),
@@ -38,7 +40,7 @@ class InstagramPublisher implements Publisher
     public function checkStatus(Publication $publication, SocialAccount $account): PublishResult
     {
         $container = MetaGraph::throwIfFailed(
-            MetaGraph::request($account->access_token)->get(MetaGraph::url((string) $publication->processing_id), [
+            $this->request($account)->get($this->url($account, (string) $publication->processing_id), [
                 'fields' => 'status_code,status',
             ]),
             $account,
@@ -56,7 +58,7 @@ class InstagramPublisher implements Publisher
     private function publishContainer(Publication $publication, SocialAccount $account): PublishResult
     {
         $published = MetaGraph::throwIfFailed(
-            MetaGraph::request($account->access_token)->asForm()->post(MetaGraph::url("{$account->external_id}/media_publish"), [
+            $this->request($account)->asForm()->post($this->url($account, "{$account->external_id}/media_publish"), [
                 'creation_id' => $publication->processing_id,
             ]),
             $account,
@@ -64,8 +66,20 @@ class InstagramPublisher implements Publisher
 
         $mediaId = (string) $published->json('id');
 
-        $media = MetaGraph::request($account->access_token)->get(MetaGraph::url($mediaId), ['fields' => 'permalink']);
+        $media = $this->request($account)->get($this->url($account, $mediaId), ['fields' => 'permalink']);
 
         return PublishResult::published($mediaId, $media->json('permalink'));
+    }
+
+    private function request(SocialAccount $account): PendingRequest
+    {
+        return $account->usesInstagramLogin()
+            ? MetaGraph::instagramRequest($account->access_token)
+            : MetaGraph::request($account->access_token);
+    }
+
+    private function url(SocialAccount $account, string $path): string
+    {
+        return $account->usesInstagramLogin() ? MetaGraph::instagramUrl($path) : MetaGraph::url($path);
     }
 }

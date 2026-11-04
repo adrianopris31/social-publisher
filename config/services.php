@@ -56,6 +56,12 @@ return [
         'direct_post' => (bool) env('TIKTOK_DIRECT_POST', false),
     ],
 
+    'instagram' => [
+        'client_id' => env('INSTAGRAM_CLIENT_ID'),
+        'client_secret' => env('INSTAGRAM_CLIENT_SECRET'),
+        'redirect' => env('INSTAGRAM_REDIRECT_URI'),
+    ],
+
     'threads' => [
         'client_id' => env('THREADS_CLIENT_ID'),
         'client_secret' => env('THREADS_CLIENT_SECRET'),

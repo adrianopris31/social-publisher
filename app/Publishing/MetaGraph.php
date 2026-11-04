@@ -52,6 +52,22 @@ class MetaGraph
             ]);
     }
 
+    public static function instagramUrl(string $path): string
+    {
+        return 'https://graph.instagram.com/'.self::version().'/'.ltrim($path, '/');
+    }
+
+    /**
+     * A request for accounts connected with Instagram Login. Their tokens belong to the Instagram
+     * app, so the Facebook app secret cannot sign them.
+     */
+    public static function instagramRequest(string $accessToken): PendingRequest
+    {
+        return Http::acceptJson()
+            ->timeout(60)
+            ->withQueryParameters(['access_token' => $accessToken]);
+    }
+
     /**
      * Turn a failed Graph response into the exception the publishing jobs understand.
      *

@@ -27,6 +27,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { redirect as instagramRedirect } from '@/routes/instagram';
 import { redirect as linkedinRedirect } from '@/routes/linkedin';
 import { redirect as metaRedirect } from '@/routes/meta';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
@@ -42,6 +43,7 @@ type SocialAccount = {
     display_name: string;
     avatar_url: string | null;
     needs_reconnection: boolean;
+    uses_instagram_login: boolean;
     connected_at: string | null;
 };
 
@@ -54,6 +56,8 @@ type PlatformInfo = {
     requirements: string[];
     /** OAuth start URL; null until the integration exists. */
     connectUrl: string | null;
+    /** A second way to connect, also used to reconnect accounts that came through it. */
+    alternativeConnect?: { label: string; url: string };
     /** Replaces the description and requirements when direct posting is enabled. */
     directPost?: Pick<PlatformInfo, 'description' | 'requirements'>;
 };
@@ -76,13 +80,17 @@ const platforms: PlatformInfo[] = [
         name: 'Instagram',
         accountNoun: 'account',
         description:
-            'Publish Reels to professional Instagram accounts linked to a Facebook Page. Connecting goes through Facebook Login.',
+            'Publish Reels to professional Instagram accounts. Sign in with Instagram, no Facebook Page needed.',
         requirements: [
             "A professional Instagram account (Creator or Business). Personal accounts can't publish through the API. Switch in Instagram: Settings → Account type and tools → Switch to professional account.",
-            'The Instagram account must be linked to a Facebook Page you manage. In Facebook, open the Page → Settings → Linked accounts → Instagram → Connect. Linking Instagram to your personal Facebook profile (Accounts Center) is not enough.',
-            'In the Facebook window, choose Edit access and select both the Page and the Instagram account.',
+            'Instagram asks you to allow publishing. Keep every permission on.',
+            'Already linked to a Facebook Page? You can use Connect with Facebook instead: in the Facebook window, choose Edit access and select both the Page and the Instagram account.',
         ],
-        connectUrl: metaRedirect.url(),
+        connectUrl: instagramRedirect.url(),
+        alternativeConnect: {
+            label: 'Connect with Facebook',
+            url: metaRedirect.url(),
+        },
     },
     {
         platform: 'facebook',
@@ -217,19 +225,30 @@ function PlatformCard({
                 </div>
 
                 {info.connectUrl ? (
-                    // A plain link, not <Link>: the OAuth flow needs a full page visit to the provider.
-                    <Button
-                        asChild
-                        size="sm"
-                        variant={accounts.length > 0 ? 'outline' : 'default'}
-                    >
-                        <a href={info.connectUrl}>
-                            <Plus />
-                            {accounts.length > 0
-                                ? `Add ${info.accountNoun}`
-                                : 'Connect'}
-                        </a>
-                    </Button>
+                    // Plain links, not <Link>: the OAuth flow needs a full page visit to the provider.
+                    <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
+                        {info.alternativeConnect && (
+                            <Button asChild size="sm" variant="outline">
+                                <a href={info.alternativeConnect.url}>
+                                    {info.alternativeConnect.label}
+                                </a>
+                            </Button>
+                        )}
+                        <Button
+                            asChild
+                            size="sm"
+                            variant={
+                                accounts.length > 0 ? 'outline' : 'default'
+                            }
+                        >
+                            <a href={info.connectUrl}>
+                                <Plus />
+                                {accounts.length > 0
+                                    ? `Add ${info.accountNoun}`
+                                    : 'Connect'}
+                            </a>
+                        </Button>
+                    </div>
                 ) : (
                     <Badge variant="secondary">Coming soon</Badge>
                 )}
@@ -248,7 +267,12 @@ function PlatformCard({
                                 key={account.id}
                                 account={account}
                                 platformName={info.name}
-                                connectUrl={info.connectUrl}
+                                connectUrl={
+                                    account.uses_instagram_login
+                                        ? info.connectUrl
+                                        : (info.alternativeConnect?.url ??
+                                          info.connectUrl)
+                                }
                             />
                         ))}
                     </ul>
