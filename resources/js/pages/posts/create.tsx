@@ -2,10 +2,10 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle, CalendarClock, Info, Send, Upload } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { AccountAvatar } from '@/components/account-avatar';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -29,7 +29,7 @@ import type { TikTokDirectSettings } from '@/components/tiktok-direct-post-field
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { formatDuration, formatFileSize, platformIcons } from '@/lib/platforms';
+import { formatDuration, formatFileSize } from '@/lib/platforms';
 import { create, store, update } from '@/routes/posts';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import { create as createVideo } from '@/routes/videos';
@@ -531,7 +531,6 @@ function AccountOption({
     onToggle: (checked: boolean) => void;
     onChange: (changes: Partial<PublicationInput>) => void;
 }) {
-    const Icon = platformIcons[account.platform];
     const isDisabled = account.needs_reconnection || isTooLong || isTooLarge;
     const checkboxId = `account-${account.id}`;
     const effectiveCaption = publication?.caption || defaultCaption;
@@ -563,23 +562,16 @@ function AccountOption({
                     disabled={isDisabled}
                     onCheckedChange={(checked) => onToggle(checked === true)}
                 />
-                <Avatar className="size-8">
-                    {account.avatar_url && (
-                        <AvatarImage
-                            src={account.avatar_url}
-                            alt={account.display_name}
-                        />
-                    )}
-                    <AvatarFallback>
-                        <Icon className="size-4" />
-                    </AvatarFallback>
-                </Avatar>
+                <AccountAvatar
+                    platform={account.platform}
+                    name={account.display_name}
+                    avatarUrl={account.avatar_url}
+                />
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                         {account.display_name}
                     </p>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Icon className="size-3" />
+                    <p className="text-xs text-muted-foreground">
                         {limits.label}
                     </p>
                 </div>

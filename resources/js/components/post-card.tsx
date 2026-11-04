@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import PostController from '@/actions/App/Http/Controllers/PostController';
 import PublicationRetryController from '@/actions/App/Http/Controllers/PublicationRetryController';
+import { AccountAvatar } from '@/components/account-avatar';
 import { PublicationStatusBadge } from '@/components/publication-status-badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -31,7 +31,6 @@ import {
     dateTimeFormatter,
     formatDuration,
     inFlightStatuses,
-    platformIcons,
     platformNames,
 } from '@/lib/platforms';
 import type { Post, Publication } from '@/types';
@@ -118,29 +117,17 @@ function PublicationRow({
     publication: Publication;
     isScheduled: boolean;
 }) {
-    const Icon = platformIcons[publication.platform];
     const accountName =
         publication.account?.display_name ?? 'Disconnected account';
 
     return (
         <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-3">
             <div className="flex min-w-0 items-center gap-3">
-                <div className="relative">
-                    <Avatar className="size-8">
-                        {publication.account?.avatar_url && (
-                            <AvatarImage
-                                src={publication.account.avatar_url}
-                                alt={accountName}
-                            />
-                        )}
-                        <AvatarFallback>
-                            <Icon className="size-4" />
-                        </AvatarFallback>
-                    </Avatar>
-                    <span className="absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-full border bg-background">
-                        <Icon className="size-2.5" />
-                    </span>
-                </div>
+                <AccountAvatar
+                    platform={publication.platform}
+                    name={accountName}
+                    avatarUrl={publication.account?.avatar_url}
+                />
                 <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
                         {accountName}

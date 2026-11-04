@@ -1,18 +1,8 @@
 import { Form, Head } from '@inertiajs/react';
-import {
-    AlertTriangle,
-    AtSign,
-    ChevronDown,
-    Facebook,
-    Instagram,
-    Linkedin,
-    Music2,
-    Plus,
-    Youtube,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Plus } from 'lucide-react';
 import SocialAccountController from '@/actions/App/Http/Controllers/SocialAccountController';
 import Heading from '@/components/heading';
+import { PlatformIcon } from '@/components/platform-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,7 +50,6 @@ type PlatformInfo = {
     name: string;
     accountNoun: string;
     description: string;
-    icon: LucideIcon;
     /** What the user needs on the platform's side before connecting. */
     requirements: string[];
     /** OAuth start URL; null until the integration exists. */
@@ -75,7 +64,6 @@ const platforms: PlatformInfo[] = [
         name: 'YouTube',
         accountNoun: 'channel',
         description: 'Publish Shorts to your YouTube channels.',
-        icon: Youtube,
         requirements: [
             "A YouTube channel on the Google account you sign in with. Create one at youtube.com if you haven't yet.",
             'If you manage several channels (Brand Accounts), pick the right one when Google asks.',
@@ -89,7 +77,6 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'account',
         description:
             'Publish Reels to professional Instagram accounts linked to a Facebook Page. Connecting goes through Facebook Login.',
-        icon: Instagram,
         requirements: [
             "A professional Instagram account (Creator or Business). Personal accounts can't publish through the API. Switch in Instagram: Settings → Account type and tools → Switch to professional account.",
             'The Instagram account must be linked to a Facebook Page you manage. In Facebook, open the Page → Settings → Linked accounts → Instagram → Connect. Linking Instagram to your personal Facebook profile (Accounts Center) is not enough.',
@@ -103,7 +90,6 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'Page',
         description:
             'Publish Reels to your Facebook Pages. Connecting also adds the Instagram accounts linked to them.',
-        icon: Facebook,
         requirements: [
             "A Facebook Page where you have full control. Personal profiles can't publish through the API.",
             'In the Facebook window, choose Edit access and select every Page (and linked Instagram account) you want to publish to.',
@@ -117,7 +103,6 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'account',
         description:
             'Send videos to your TikTok inbox to finish posting in the app.',
-        icon: Music2,
         requirements: [
             'Sign in with the TikTok account you want to post to.',
             'Videos arrive in your TikTok inbox: open the notification in the TikTok app to edit and post them.',
@@ -138,7 +123,6 @@ const platforms: PlatformInfo[] = [
         name: 'Threads',
         accountNoun: 'profile',
         description: 'Publish video posts to your Threads profiles.',
-        icon: AtSign,
         requirements: [
             'A Threads profile. Threads profiles are created from an Instagram account in the Threads app.',
             'Sign in with the Instagram account behind your Threads profile.',
@@ -151,7 +135,6 @@ const platforms: PlatformInfo[] = [
         accountNoun: 'profile',
         description:
             'Share videos on your LinkedIn profile. LinkedIn asks you to reconnect every 60 days.',
-        icon: Linkedin,
         requirements: [
             'Posts go to your personal LinkedIn profile. Company Pages are not supported yet.',
             "LinkedIn doesn't allow long-lived access: reconnect every 60 days when prompted.",
@@ -219,15 +202,14 @@ function PlatformCard({
     info: PlatformInfo;
     accounts: SocialAccount[];
 }) {
-    const Icon = info.icon;
-
     return (
         <Card className="gap-4">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-muted">
-                        <Icon className="size-5" />
-                    </div>
+                    <PlatformIcon
+                        platform={info.platform}
+                        className="size-10"
+                    />
                     <div className="space-y-1">
                         <CardTitle>{info.name}</CardTitle>
                         <CardDescription>{info.description}</CardDescription>

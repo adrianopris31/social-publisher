@@ -4,14 +4,11 @@ import type { ChangeEvent } from 'react';
 import { toast } from 'sonner';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { PlatformIcon } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    formatDurationLimit,
-    formatFileSize,
-    platformIcons,
-} from '@/lib/platforms';
+import { formatDurationLimit, formatFileSize } from '@/lib/platforms';
 import { uploadToPresignedUrl } from '@/lib/upload-to-presigned-url';
 import type { PresignedUpload } from '@/lib/upload-to-presigned-url';
 import {
@@ -254,13 +251,13 @@ function PlatformLimitsTable({
                     </thead>
                     <tbody>
                         {platforms.map((platform) => {
-                            const Icon = platformIcons[platform.value];
-
                             return (
                                 <tr key={platform.value} className="border-t">
                                     <td className="px-3 py-2">
                                         <span className="flex items-center gap-2">
-                                            <Icon className="size-4 text-muted-foreground" />
+                                            <PlatformIcon
+                                                platform={platform.value}
+                                            />
                                             {platform.label}
                                         </span>
                                     </td>

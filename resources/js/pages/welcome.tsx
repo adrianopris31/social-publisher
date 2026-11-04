@@ -1,8 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { CalendarClock, Layers, Upload } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { PlatformIcon } from '@/components/platform-icon';
 import { Button } from '@/components/ui/button';
-import { platformIcons, platformNames } from '@/lib/platforms';
+import { platformNames } from '@/lib/platforms';
 import { cookies, dashboard, login, privacy, register, terms } from '@/routes';
 import type { Platform } from '@/types';
 
@@ -77,19 +78,15 @@ export default function Welcome() {
                     </p>
 
                     <div className="mt-8 flex flex-wrap justify-center gap-3">
-                        {platforms.map((platform) => {
-                            const Icon = platformIcons[platform];
-
-                            return (
-                                <span
-                                    key={platform}
-                                    className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm"
-                                >
-                                    <Icon className="size-4" />
-                                    {platformNames[platform]}
-                                </span>
-                            );
-                        })}
+                        {platforms.map((platform) => (
+                            <span
+                                key={platform}
+                                className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm"
+                            >
+                                <PlatformIcon platform={platform} />
+                                {platformNames[platform]}
+                            </span>
+                        ))}
                     </div>
 
                     <Button asChild size="lg" className="mt-8">

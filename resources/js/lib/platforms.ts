@@ -1,12 +1,3 @@
-import {
-    AtSign,
-    Facebook,
-    Instagram,
-    Linkedin,
-    Music2,
-    Youtube,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import type { Platform, PublicationStatus } from '@/types';
 
 export const platformNames: Record<Platform, string> = {
@@ -16,15 +7,6 @@ export const platformNames: Record<Platform, string> = {
     tiktok: 'TikTok',
     threads: 'Threads',
     linkedin: 'LinkedIn',
-};
-
-export const platformIcons: Record<Platform, LucideIcon> = {
-    youtube: Youtube,
-    instagram: Instagram,
-    facebook: Facebook,
-    tiktok: Music2,
-    threads: AtSign,
-    linkedin: Linkedin,
 };
 
 /** Statuses that change on their own, so pages showing them keep polling. */
