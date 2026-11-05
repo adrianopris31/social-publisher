@@ -1,8 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import {
     AlertCircle,
     CalendarClock,
     CheckCircle2,
+    ChevronUp,
     Film,
     Link2,
     Loader2,
@@ -14,6 +16,7 @@ import { hasInFlightPublications, PostCard } from '@/components/post-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePollWhile } from '@/hooks/use-poll-while';
+import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { create as createPost, index as postsIndex } from '@/routes/posts';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
@@ -29,6 +32,28 @@ type Stats = {
     videos: number;
 };
 
+const RECENT_POSTS_HIDDEN_KEY = 'dashboard_recent_posts_hidden';
+
+function readRecentPostsHidden(): boolean {
+    try {
+        return localStorage.getItem(RECENT_POSTS_HIDDEN_KEY) === '1';
+    } catch {
+        return false;
+    }
+}
+
+function storeRecentPostsHidden(isHidden: boolean): void {
+    try {
+        if (isHidden) {
+            localStorage.setItem(RECENT_POSTS_HIDDEN_KEY, '1');
+        } else {
+            localStorage.removeItem(RECENT_POSTS_HIDDEN_KEY);
+        }
+    } catch {
+        // The choice then only lasts until the page is left.
+    }
+}
+
 export default function Dashboard({
     stats,
     recentPosts,
@@ -40,6 +65,15 @@ export default function Dashboard({
         'stats',
         'recentPosts',
     ]);
+
+    const [isRecentPostsHidden, setIsRecentPostsHidden] = useState(
+        readRecentPostsHidden,
+    );
+
+    const toggleRecentPosts = () => {
+        storeRecentPostsHidden(!isRecentPostsHidden);
+        setIsRecentPostsHidden(!isRecentPostsHidden);
+    };
 
     const tiles: { label: string; value: number; icon: LucideIcon }[] = [
         { label: 'Published', value: stats.published, icon: CheckCircle2 },
@@ -95,24 +129,54 @@ export default function Dashboard({
                         <h2 className="text-base font-semibold">
                             Recent posts
                         </h2>
-                        {recentPosts.data.length > 0 && (
-                            <Button asChild variant="link" size="sm">
-                                <Link href={postsIndex()}>View all</Link>
+                        <div className="flex items-center gap-1">
+                            {recentPosts.data.length > 0 && (
+                                <Button asChild variant="link" size="sm">
+                                    <Link href={postsIndex()}>View all</Link>
+                                </Button>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-expanded={!isRecentPostsHidden}
+                                aria-controls="recent-posts"
+                                onClick={toggleRecentPosts}
+                            >
+                                <ChevronUp
+                                    className={cn(
+                                        'transition-transform duration-300 ease-out motion-reduce:transition-none',
+                                        isRecentPostsHidden && 'rotate-180',
+                                    )}
+                                />
+                                {isRecentPostsHidden ? 'Show' : 'Hide'}
                             </Button>
-                        )}
+                        </div>
                     </div>
 
-                    {recentPosts.data.length === 0 ? (
-                        <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                            Nothing published yet.
-                        </p>
-                    ) : (
-                        <div className="space-y-4">
-                            {recentPosts.data.map((post) => (
-                                <PostCard key={post.id} post={post} />
-                            ))}
+                    <div
+                        id="recent-posts"
+                        inert={isRecentPostsHidden}
+                        className={cn(
+                            'grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none',
+                            isRecentPostsHidden
+                                ? 'grid-rows-[0fr] opacity-0'
+                                : 'grid-rows-[1fr] opacity-100',
+                        )}
+                    >
+                        <div className="-mx-1 min-h-0 overflow-hidden px-1 pb-1">
+                            {recentPosts.data.length === 0 ? (
+                                <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                                    Nothing published yet.
+                                </p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {recentPosts.data.map((post) => (
+                                        <PostCard key={post.id} post={post} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                 </section>
             </div>
         </>
