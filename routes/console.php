@@ -12,4 +12,6 @@ Schedule::command('model:prune')->daily();
 
 Schedule::command('posts:publish-due')->everyMinute()->withoutOverlapping();
 
-Schedule::command('horizon:snapshot')->everyFiveMinutes();
+Schedule::command('horizon:snapshot')
+    ->everyFiveMinutes()
+    ->when(fn (): bool => config('queue.default') === 'redis');
