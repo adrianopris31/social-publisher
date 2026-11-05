@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { COMPANY, CONTACT_EMAIL, LegalPage } from '@/components/legal-page';
-import { cookies } from '@/routes';
+import { cookies, dataDeletion } from '@/routes';
 
 export default function Privacy() {
     return (
-        <LegalPage title="Privacy Policy" updatedAt="October 21, 2026">
+        <LegalPage title="Privacy Policy" updatedAt="November 5, 2026">
             <p>
                 This app lets creators upload a short vertical video once and
                 publish it to the social accounts they connect. This policy
@@ -15,7 +15,9 @@ export default function Privacy() {
             <h2>Data controller</h2>
             <p>
                 The controller of your personal data is {COMPANY.name}, tax id{' '}
-                {COMPANY.taxId}, {COMPANY.address}. You can reach us at{' '}
+                {COMPANY.taxId}, trade register number{' '}
+                {COMPANY.registrationNumber}, {COMPANY.address}. You can reach
+                us at{' '}
                 <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>
                     {CONTACT_EMAIL}
                 </a>
@@ -71,7 +73,40 @@ export default function Privacy() {
                 or platform data for any other purpose.
             </p>
 
-            <h2>Google user data</h2>
+            <h2>Who can use the app</h2>
+            <p>
+                The app is intended for people aged 18 or over. We do not
+                knowingly collect data from anyone younger. If you believe a
+                minor has created an account, contact us and we will delete it.
+            </p>
+
+            <h2>YouTube and Google user data</h2>
+            <p>
+                This app uses YouTube API Services. When you connect a YouTube
+                channel, Google processes your data under the{' '}
+                <a
+                    className="underline"
+                    href="https://www.google.com/policies/privacy"
+                >
+                    Google Privacy Policy
+                </a>
+                . We access your channel id, name and picture, and we upload the
+                videos you choose together with their title, description and
+                privacy setting. We store the channel details, the access
+                tokens, and the id and status of each uploaded video, use them
+                only to publish for you and show you the result, and share them
+                only with the providers listed below.
+            </p>
+            <p>
+                You can revoke our access at any time on the{' '}
+                <a
+                    className="underline"
+                    href="https://security.google.com/settings/security/permissions"
+                >
+                    Google security settings page
+                </a>
+                , in addition to the deletion options described below.
+            </p>
             <p>
                 Our use and transfer of information received from Google APIs
                 adheres to the{' '}
@@ -109,6 +144,10 @@ export default function Privacy() {
                 <li>
                     Our hosting provider: runs the app, its database and its
                     background jobs.
+                </li>
+                <li>
+                    Our email delivery provider: sends account emails such as
+                    address verification and password resets.
                 </li>
                 <li>
                     The platforms you choose to publish to (Google/YouTube,
@@ -150,7 +189,12 @@ export default function Privacy() {
             </ul>
             <p>
                 You can also revoke access at any time from your Google, Meta,
-                TikTok or LinkedIn account settings.
+                TikTok or LinkedIn account settings. When you ask us to delete
+                your data, we do so as soon as possible and within 7 days. See{' '}
+                <Link className="underline" href={dataDeletion()}>
+                    how to delete your data
+                </Link>
+                .
             </p>
 
             <h2>Your rights</h2>
@@ -172,7 +216,9 @@ export default function Privacy() {
 
             <h2>Cookies</h2>
             <p>
-                We only use cookies needed to run the app. See the{' '}
+                We store and read cookies and browser local storage on your
+                device, only as needed to run the app and remember your display
+                preferences. See the{' '}
                 <Link className="underline" href={cookies()}>
                     Cookie Policy
                 </Link>

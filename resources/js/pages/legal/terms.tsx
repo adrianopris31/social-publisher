@@ -4,7 +4,7 @@ import { privacy } from '@/routes';
 
 export default function Terms() {
     return (
-        <LegalPage title="Terms of Service" updatedAt="October 21, 2026">
+        <LegalPage title="Terms of Service" updatedAt="November 5, 2026">
             <p>
                 By using this app you agree to these terms. If you do not agree,
                 do not use the app.
@@ -12,7 +12,8 @@ export default function Terms() {
 
             <h2>Who we are</h2>
             <p>
-                The app is operated by {COMPANY.name}, tax id {COMPANY.taxId},{' '}
+                The app is operated by {COMPANY.name}, tax id {COMPANY.taxId},
+                trade register number {COMPANY.registrationNumber},{' '}
                 {COMPANY.address} (&quot;we&quot;).
             </p>
 
@@ -22,6 +23,19 @@ export default function Terms() {
                 connect and publishes them with the metadata you choose, now or
                 at a scheduled time. It is provided as is, without guarantees
                 that a platform accepts, keeps or ranks a video.
+            </p>
+
+            <h2>Who can use the app</h2>
+            <p>You must be at least 18 years old to use the app.</p>
+
+            <h2>YouTube</h2>
+            <p>
+                The app uses YouTube API Services. By using the app with a
+                YouTube account, you agree to be bound by the{' '}
+                <a className="underline" href="https://www.youtube.com/t/terms">
+                    YouTube Terms of Service
+                </a>
+                .
             </p>
 
             <h2>Your content and accounts</h2>
@@ -46,6 +60,21 @@ export default function Terms() {
                     activity on your account.
                 </li>
             </ul>
+
+            <h2>Reporting illegal content</h2>
+            <p>
+                To report content stored in the app that you believe is illegal,
+                email{' '}
+                <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>
+                    {CONTACT_EMAIL}
+                </a>{' '}
+                with the reason, where the content is, your name and email
+                address, and a statement that your report is made in good faith.
+                We review reports, may remove the content or suspend the
+                account, and tell you and the affected user what we decided and
+                why. This address is also our point of contact for users and for
+                authorities. We answer in Romanian or English.
+            </p>
 
             <h2>Platform limits</h2>
             <p>

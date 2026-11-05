@@ -1,6 +1,15 @@
 import { Link } from '@inertiajs/react';
-import { Film, LayoutGrid, Link2, Send, SquarePen } from 'lucide-react';
+import {
+    FileText,
+    Film,
+    LayoutGrid,
+    Link2,
+    Send,
+    ShieldCheck,
+    SquarePen,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
+import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -12,7 +21,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
+import { dashboard, privacy, terms } from '@/routes';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import { create as createPost, index as postsIndex } from '@/routes/posts';
 import { index as videosIndex } from '@/routes/videos';
@@ -46,6 +55,19 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const footerNavItems: NavItem[] = [
+    {
+        title: 'Privacy Policy',
+        href: privacy(),
+        icon: ShieldCheck,
+    },
+    {
+        title: 'Terms of Service',
+        href: terms(),
+        icon: FileText,
+    },
+];
+
 export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -66,6 +88,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
+                <NavFooter items={footerNavItems} />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

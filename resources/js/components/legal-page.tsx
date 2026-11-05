@@ -1,7 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
-import { cookies, home, privacy, terms } from '@/routes';
+import { cookies, dataDeletion, home, privacy, terms } from '@/routes';
 
 export const CONTACT_EMAIL = 'office@istorm.ro';
 
@@ -9,6 +9,7 @@ export const CONTACT_EMAIL = 'office@istorm.ro';
 export const COMPANY = {
     name: 'SC ISTORM SRL',
     taxId: 'RO13256672',
+    registrationNumber: 'J2000000430261',
     address: 'str. Alunis nr. 4, Targu Mures, jud. Mures, Romania',
 };
 
@@ -36,7 +37,7 @@ export function LegalPage({
                             <AppLogoIcon className="size-6 fill-current" />
                             {name}
                         </Link>
-                        <nav className="flex gap-4 text-sm text-muted-foreground">
+                        <nav className="flex flex-wrap justify-end gap-x-4 gap-y-1 text-sm text-muted-foreground">
                             <Link
                                 href={privacy()}
                                 className="hover:text-foreground"
@@ -54,6 +55,12 @@ export function LegalPage({
                                 className="hover:text-foreground"
                             >
                                 Cookies
+                            </Link>
+                            <Link
+                                href={dataDeletion()}
+                                className="hover:text-foreground"
+                            >
+                                Data deletion
                             </Link>
                         </nav>
                     </div>

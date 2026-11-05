@@ -2,7 +2,7 @@ import { CONTACT_EMAIL, LegalPage } from '@/components/legal-page';
 
 export default function Cookies() {
     return (
-        <LegalPage title="Cookie Policy" updatedAt="October 21, 2026">
+        <LegalPage title="Cookie Policy" updatedAt="November 5, 2026">
             <p>
                 Cookies are small text files a website stores in your browser.
                 This app only uses cookies that are needed for it to work, so it
@@ -31,6 +31,16 @@ export default function Cookies() {
                 <li>
                     sidebar_state: remembers whether the sidebar is open.
                     Expires after 7 days.
+                </li>
+            </ul>
+
+            <h2>Browser local storage</h2>
+            <ul>
+                <li>appearance: also keeps your light/dark theme choice.</li>
+                <li>
+                    dashboard_recent_posts_hidden: remembers that you hid recent
+                    posts on the dashboard. Stays until you show them again or
+                    clear your browser data.
                 </li>
             </ul>
 

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { login } from '@/routes';
+import { login, privacy, terms } from '@/routes';
 import { store } from '@/routes/register';
 
 type Props = {
@@ -99,11 +99,35 @@ export default function Register({ passwordRules }: Props) {
                                 {processing && <Spinner />}
                                 Create account
                             </Button>
+
+                            <p className="text-center text-xs text-muted-foreground">
+                                By creating an account you agree to our{' '}
+                                <a
+                                    href={terms.url()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    tabIndex={6}
+                                    className="underline underline-offset-4 hover:text-foreground"
+                                >
+                                    Terms of Service
+                                </a>{' '}
+                                and{' '}
+                                <a
+                                    href={privacy.url()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    tabIndex={7}
+                                    className="underline underline-offset-4 hover:text-foreground"
+                                >
+                                    Privacy Policy
+                                </a>
+                                .
+                            </p>
                         </div>
 
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
+                            <TextLink href={login()} tabIndex={8}>
                                 Log in
                             </TextLink>
                         </div>

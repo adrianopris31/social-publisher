@@ -10,4 +10,5 @@ test('guests can read the legal pages', function (string $routeName, string $com
     'privacy' => ['privacy', 'legal/privacy'],
     'terms' => ['terms', 'legal/terms'],
     'cookies' => ['cookies', 'legal/cookies'],
+    'data deletion' => ['data-deletion', 'legal/data-deletion'],
 ]);
