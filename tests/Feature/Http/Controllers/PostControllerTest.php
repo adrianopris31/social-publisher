@@ -58,6 +58,52 @@ describe('index', function () {
             );
     });
 
+    test('it shows the latest 15 posts and offers to load more', function () {
+        $user = User::factory()->create();
+        Post::factory()->for($user)->count(16)->create();
+
+        $this->actingAs($user)
+            ->get(route('posts.index'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('posts.data', 15)
+                ->where('nextLimit', 30)
+            );
+    });
+
+    test('it loads more posts and stops offering them at the end of the list', function () {
+        $user = User::factory()->create();
+        Post::factory()->for($user)->count(16)->create();
+
+        $this->actingAs($user)
+            ->get(route('posts.index', ['limit' => 30]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('posts.data', 16)
+                ->where('nextLimit', null)
+            );
+    });
+
+    test('it never shows fewer posts than the first load', function (mixed $limit) {
+        $user = User::factory()->create();
+        Post::factory()->for($user)->count(16)->create();
+
+        $this->actingAs($user)
+            ->get(route('posts.index', ['limit' => $limit]))
+            ->assertInertia(fn (Assert $page) => $page->has('posts.data', 15));
+    })->with(['too small' => 1, 'negative' => -5, 'not a number' => 'abc']);
+
+    test('it caps how many posts can be loaded', function () {
+        $user = User::factory()->create();
+        $video = Video::factory()->for($user)->create();
+        Post::factory()->for($user)->for($video)->count(501)->create();
+
+        $this->actingAs($user)
+            ->get(route('posts.index', ['limit' => 100000]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('posts.data', 500)
+                ->where('nextLimit', null)
+            );
+    });
+
     test('it flags TikTok publications that were sent to the inbox', function (Platform $platform, ?string $mode, bool $isTikTokInbox) {
         $user = User::factory()->create();
         $post = Post::factory()->for($user)->create();

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Plus, Send } from 'lucide-react';
+import { Plus, Send } from 'lucide-react';
 import Heading from '@/components/heading';
 import { hasInFlightPublications, PostCard } from '@/components/post-card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,14 @@ import { usePollWhile } from '@/hooks/use-poll-while';
 import { create, index } from '@/routes/posts';
 import type { Post, ResourcePage } from '@/types';
 
-export default function PostsIndex({ posts }: { posts: ResourcePage<Post> }) {
-    usePollWhile(hasInFlightPublications(posts.data), ['posts']);
+export default function PostsIndex({
+    posts,
+    nextLimit,
+}: {
+    posts: ResourcePage<Post>;
+    nextLimit: number | null;
+}) {
+    usePollWhile(hasInFlightPublications(posts.data), ['posts', 'nextLimit']);
 
     return (
         <>
@@ -38,49 +44,24 @@ export default function PostsIndex({ posts }: { posts: ResourcePage<Post> }) {
                     </div>
                 )}
 
-                {posts.meta.last_page > 1 && (
-                    <nav className="mt-6 flex items-center justify-between">
+                {nextLimit !== null && (
+                    <div className="mt-6 flex justify-center">
                         <Button
-                            asChild={posts.links.prev !== null}
+                            asChild
                             variant="outline"
-                            size="sm"
-                            disabled={posts.links.prev === null}
+                            className="data-loading:pointer-events-none data-loading:opacity-60"
                         >
-                            {posts.links.prev ? (
-                                <Link href={posts.links.prev} preserveScroll>
-                                    <ChevronLeft />
-                                    Newer
-                                </Link>
-                            ) : (
-                                <span>
-                                    <ChevronLeft />
-                                    Newer
-                                </span>
-                            )}
+                            <Link
+                                href={index({ query: { limit: nextLimit } })}
+                                only={['posts', 'nextLimit']}
+                                preserveScroll
+                                preserveState
+                                replace
+                            >
+                                Load more
+                            </Link>
                         </Button>
-                        <span className="text-sm text-muted-foreground">
-                            Page {posts.meta.current_page} of{' '}
-                            {posts.meta.last_page}
-                        </span>
-                        <Button
-                            asChild={posts.links.next !== null}
-                            variant="outline"
-                            size="sm"
-                            disabled={posts.links.next === null}
-                        >
-                            {posts.links.next ? (
-                                <Link href={posts.links.next} preserveScroll>
-                                    Older
-                                    <ChevronRight />
-                                </Link>
-                            ) : (
-                                <span>
-                                    Older
-                                    <ChevronRight />
-                                </span>
-                            )}
-                        </Button>
-                    </nav>
+                    </div>
                 )}
             </div>
         </>

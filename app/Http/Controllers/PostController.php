@@ -23,17 +23,35 @@ use Inertia\Response;
 class PostController extends Controller
 {
     /**
-     * List the user's posts with their per-platform status.
+     * How many posts the list shows first, and how many each "Load more" adds.
+     */
+    private const int POSTS_PER_LOAD = 15;
+
+    /**
+     * Upper bound for the list, because status polling reloads every visible post.
+     */
+    private const int MAX_LOADED_POSTS = 500;
+
+    /**
+     * List the user's latest posts with their per-platform status.
+     *
+     * The list grows through a `limit` query instead of page merging, so status polling
+     * can reload the same URL and replace every visible post without duplicating any.
      */
     public function index(Request $request): Response
     {
+        $limit = min(max($request->integer('limit'), self::POSTS_PER_LOAD), self::MAX_LOADED_POSTS);
+
+        $posts = $request->user()->posts()
+            ->with(['video', 'publications.socialAccount'])
+            ->latest()
+            ->paginate($limit);
+
+        $canLoadMore = $posts->hasMorePages() && $limit < self::MAX_LOADED_POSTS;
+
         return Inertia::render('posts/index', [
-            'posts' => PostResource::collection(
-                $request->user()->posts()
-                    ->with(['video', 'publications.socialAccount'])
-                    ->latest()
-                    ->paginate(15),
-            ),
+            'posts' => PostResource::collection($posts),
+            'nextLimit' => $canLoadMore ? min($limit + self::POSTS_PER_LOAD, self::MAX_LOADED_POSTS) : null,
         ]);
     }
 
