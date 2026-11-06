@@ -151,7 +151,7 @@ function VideoCard({ video }: { video: LibraryVideo }) {
             <div className="relative aspect-[9/16] bg-muted">
                 {video.preview_url ? (
                     <video
-                        src={video.preview_url}
+                        src={`${video.preview_url}#t=0.1`}
                         className="size-full object-cover"
                         preload="metadata"
                         muted

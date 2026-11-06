@@ -295,7 +295,7 @@ export default function CreatePost({
                         {video && (
                             <video
                                 key={video.id}
-                                src={video.preview_url}
+                                src={`${video.preview_url}#t=0.1`}
                                 aria-label={`Preview of ${video.original_filename}`}
                                 className="mt-2 aspect-[9/16] w-full max-w-48 rounded-md bg-muted object-cover"
                                 preload="metadata"
