@@ -17,6 +17,7 @@ use App\Models\Video;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -188,6 +189,7 @@ class PostController extends Controller
                     'original_filename' => $video->original_filename,
                     'duration_ms' => $video->duration_ms,
                     'size_bytes' => $video->size_bytes,
+                    'preview_url' => Storage::disk($video->disk)->temporaryUrl($video->path, now()->addHour()),
                     'created_at' => $video->created_at?->toIso8601String(),
                 ]),
             'accounts' => $user->socialAccounts()

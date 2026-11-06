@@ -40,6 +40,7 @@ type ComposerVideo = {
     original_filename: string;
     duration_ms: number | null;
     size_bytes: number;
+    preview_url: string;
     created_at: string | null;
 };
 
@@ -291,6 +292,18 @@ export default function CreatePost({
                             </SelectContent>
                         </Select>
                         <InputError message={errors.video_id} />
+                        {video && (
+                            <video
+                                key={video.id}
+                                src={video.preview_url}
+                                aria-label={`Preview of ${video.original_filename}`}
+                                className="mt-2 aspect-[9/16] w-full max-w-48 rounded-md bg-muted object-cover"
+                                preload="metadata"
+                                muted
+                                playsInline
+                                controls
+                            />
+                        )}
                     </CardContent>
                 </Card>
 

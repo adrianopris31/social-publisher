@@ -141,6 +141,7 @@ describe('create', function () {
                 ->component('posts/create')
                 ->has('videos', 1)
                 ->where('videos.0.id', $video->id)
+                ->where('videos.0.preview_url', fn (string $url) => str_contains($url, $video->path))
                 ->has('accounts', 1)
                 ->where('accounts.0.id', $account->id)
                 ->where('accounts.0.can_direct_post', false)
