@@ -24,10 +24,11 @@ use Illuminate\Support\Carbon;
  * @property list<string>|null $scopes
  * @property string|null $avatar_url
  * @property Carbon|null $reconnection_required_at
+ * @property Carbon|null $api_data_refreshed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['platform', 'external_id', 'display_name', 'scopes', 'avatar_url', 'access_token', 'refresh_token', 'token_expires_at', 'reconnection_required_at'])]
+#[Fillable(['platform', 'external_id', 'display_name', 'scopes', 'avatar_url', 'access_token', 'refresh_token', 'token_expires_at', 'reconnection_required_at', 'api_data_refreshed_at'])]
 #[Hidden(['access_token', 'refresh_token'])]
 class SocialAccount extends Model
 {
@@ -47,6 +48,7 @@ class SocialAccount extends Model
             'refresh_token' => 'encrypted',
             'token_expires_at' => 'datetime',
             'reconnection_required_at' => 'datetime',
+            'api_data_refreshed_at' => 'datetime',
             'scopes' => 'array',
         ];
     }

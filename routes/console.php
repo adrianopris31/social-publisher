@@ -10,6 +10,8 @@ Artisan::command('inspire', function () {
 
 Schedule::command('model:prune')->daily();
 
+Schedule::command('youtube:refresh-data')->daily();
+
 Schedule::command('posts:publish-due')->everyMinute()->withoutOverlapping();
 
 Schedule::command('horizon:snapshot')

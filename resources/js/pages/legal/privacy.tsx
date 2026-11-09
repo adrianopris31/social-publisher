@@ -105,7 +105,11 @@ export default function Privacy() {
                 >
                     Google security settings page
                 </a>
-                , in addition to the deletion options described below.
+                , in addition to the deletion options described below. We
+                refresh the stored channel details at least every 30 days. When
+                you disconnect a channel in ClipWide, we revoke our access and
+                delete its details and tokens right away. When you revoke our
+                access in your Google settings, we delete them within 30 days.
             </p>
             <p>
                 Our use and transfer of information received from Google APIs

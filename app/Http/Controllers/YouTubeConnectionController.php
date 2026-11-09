@@ -71,6 +71,7 @@ class YouTubeConnectionController extends Controller
             'token_expires_at' => now()->addSeconds($googleUser->expiresIn),
             'reconnection_required_at' => null,
             'scopes' => $googleUser->approvedScopes,
+            'api_data_refreshed_at' => now(),
         ];
 
         if ($googleUser->refreshToken) {
