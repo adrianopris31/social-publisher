@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
+    CalendarDays,
     FileText,
     Film,
     LayoutGrid,
@@ -23,7 +24,11 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard, privacy, terms } from '@/routes';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
-import { create as createPost, index as postsIndex } from '@/routes/posts';
+import {
+    calendar as postsCalendar,
+    create as createPost,
+    index as postsIndex,
+} from '@/routes/posts';
 import { index as videosIndex } from '@/routes/videos';
 import type { NavItem } from '@/types';
 
@@ -42,6 +47,11 @@ const mainNavItems: NavItem[] = [
         title: 'Posts',
         href: postsIndex(),
         icon: Send,
+    },
+    {
+        title: 'Calendar',
+        href: postsCalendar(),
+        icon: CalendarDays,
     },
     {
         title: 'Videos',

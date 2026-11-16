@@ -4,7 +4,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstagramConnectionController;
 use App\Http\Controllers\LinkedInConnectionController;
 use App\Http\Controllers\MetaConnectionController;
+use App\Http\Controllers\PostCalendarController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostScheduleController;
 use App\Http\Controllers\PublicationRetryController;
 use App\Http\Controllers\SocialAccountController;
 use App\Http\Controllers\ThreadsConnectionController;
@@ -45,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->can('delete', 'post')
         ->name('posts.destroy');
     Route::post('publications/{publication}/retry', PublicationRetryController::class)->name('publications.retry');
+    Route::get('posts/calendar', PostCalendarController::class)->name('posts.calendar');
+    Route::patch('posts/{post}/schedule', PostScheduleController::class)->name('posts.schedule.update');
 
     Route::get('social-accounts', [SocialAccountController::class, 'index'])->name('social-accounts.index');
     Route::delete('social-accounts/{socialAccount}', [SocialAccountController::class, 'destroy'])
