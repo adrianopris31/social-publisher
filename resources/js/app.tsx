@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -39,6 +39,11 @@ void createInertiaApp({
         color: '#4B5563',
     },
 });
+
+// Sidebar links prefetch on hover and Inertia caches those pages for 30 s. Statuses change in
+// the background (uploads, publishing), so drop the cache on every page change: a hover still
+// speeds up the click that follows it, but no page is ever shown from an older visit.
+router.on('navigate', () => router.flushAll());
 
 // This will set light / dark mode on load...
 initializeTheme();

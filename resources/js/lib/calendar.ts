@@ -148,6 +148,30 @@ export function postCalendarStatus(post: Post): PostCalendarStatus {
 }
 
 /**
+ * A local time as "HH:MM", the value format of `<input type="time">`.
+ */
+export function toTimeValue(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${minutes}`;
+}
+
+/**
+ * "2026-11-20" + "14:30" → that local moment, or null while either input is incomplete.
+ */
+export function atLocalTime(dayKey: string, time: string): Date | null {
+    const [year, monthNumber, day] = dayKey.split('-').map(Number);
+    const [hours, minutes] = time.split(':').map(Number);
+
+    if ([year, monthNumber, day, hours, minutes].some(Number.isNaN)) {
+        return null;
+    }
+
+    return new Date(year, monthNumber - 1, day, hours, minutes);
+}
+
+/**
  * The same local time of day on another day.
  */
 export function moveToDay(isoDateTime: string, dayKey: string): Date {

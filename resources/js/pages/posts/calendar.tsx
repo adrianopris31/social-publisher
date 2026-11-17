@@ -8,6 +8,8 @@ import Heading from '@/components/heading';
 import { PlatformIcon } from '@/components/platform-icon';
 import { hasInFlightPublications, PostCard } from '@/components/post-card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
@@ -17,6 +19,7 @@ import {
 import { usePollWhile } from '@/hooks/use-poll-while';
 import type { CalendarDay, PostCalendarStatus } from '@/lib/calendar';
 import {
+    atLocalTime,
     formatMonth,
     getCalendarDays,
     groupPostsByDay,
@@ -26,6 +29,7 @@ import {
     postCalendarStatus,
     shiftMonth,
     toDateKey,
+    toTimeValue,
     weekdayLabels,
 } from '@/lib/calendar';
 import { cn } from '@/lib/utils';
@@ -87,15 +91,17 @@ export default function PostsCalendar({ month, posts }: Props) {
         setDropTargetKey(null);
     }
 
-    function reschedule(post: Post, dayKey: string): void {
+    function moveToOtherDay(post: Post, dayKey: string): void {
         if (!post.publish_at || toDateKey(postCalendarDate(post)) === dayKey) {
             return;
         }
 
-        const publishAt = moveToDay(post.publish_at, dayKey);
+        reschedule(post, moveToDay(post.publish_at, dayKey));
+    }
 
+    function reschedule(post: Post, publishAt: Date): void {
         if (publishAt <= new Date()) {
-            toast.error('That time has already passed today.');
+            toast.error('That time has already passed.');
 
             return;
         }
@@ -140,7 +146,7 @@ export default function PostsCalendar({ month, posts }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <Heading
                         title="Calendar"
-                        description={`${formatMonth(month)} · ${postCount} ${postCount === 1 ? 'post' : 'posts'}. Drag a scheduled post to another day to move it.`}
+                        description={`${formatMonth(month)} · ${postCount} ${postCount === 1 ? 'post' : 'posts'}. Drag a scheduled post to another day, or click it to change the time.`}
                     />
                     <Button asChild>
                         <Link href={create()}>
@@ -190,7 +196,7 @@ export default function PostsCalendar({ month, posts }: Props) {
                                     event.preventDefault();
 
                                     if (draggedPost && canDropOn(day)) {
-                                        reschedule(draggedPost, day.key);
+                                        moveToOtherDay(draggedPost, day.key);
                                     }
 
                                     stopDragging();
@@ -217,13 +223,78 @@ export default function PostsCalendar({ month, posts }: Props) {
                         Where the post goes and how far each platform got.
                     </DialogDescription>
                     {selectedPost && (
-                        <div className="pt-6">
+                        <div className="space-y-4 pt-6">
+                            {isScheduledPost(selectedPost) && (
+                                <QuickReschedule
+                                    // A new key resets the inputs once the saved time comes back.
+                                    key={`${selectedPost.id}-${selectedPost.publish_at}`}
+                                    post={selectedPost}
+                                    onSave={(publishAt) =>
+                                        reschedule(selectedPost, publishAt)
+                                    }
+                                />
+                            )}
                             <PostCard post={selectedPost} />
                         </div>
                     )}
                 </DialogContent>
             </Dialog>
         </>
+    );
+}
+
+/**
+ * Change the publish date and time right in the dialog, without opening the edit page.
+ */
+function QuickReschedule({
+    post,
+    onSave,
+}: {
+    post: Post;
+    onSave: (publishAt: Date) => void;
+}) {
+    const current = postCalendarDate(post);
+    const [dayKey, setDayKey] = useState(toDateKey(current));
+    const [time, setTime] = useState(toTimeValue(current));
+    const publishAt = atLocalTime(dayKey, time);
+    const isUnchanged = publishAt?.getTime() === current.getTime();
+
+    return (
+        <form
+            className="flex flex-wrap items-end gap-3 rounded-lg border bg-muted/40 p-3"
+            onSubmit={(event) => {
+                event.preventDefault();
+
+                if (publishAt && !isUnchanged) {
+                    onSave(publishAt);
+                }
+            }}
+        >
+            <div className="grid gap-1.5">
+                <Label htmlFor="quick-reschedule-date">Date</Label>
+                <Input
+                    id="quick-reschedule-date"
+                    type="date"
+                    min={toDateKey(new Date())}
+                    value={dayKey}
+                    onChange={(event) => setDayKey(event.target.value)}
+                    className="w-auto"
+                />
+            </div>
+            <div className="grid gap-1.5">
+                <Label htmlFor="quick-reschedule-time">Time</Label>
+                <Input
+                    id="quick-reschedule-time"
+                    type="time"
+                    value={time}
+                    onChange={(event) => setTime(event.target.value)}
+                    className="w-auto"
+                />
+            </div>
+            <Button type="submit" disabled={!publishAt || isUnchanged}>
+                Reschedule
+            </Button>
+        </form>
     );
 }
 

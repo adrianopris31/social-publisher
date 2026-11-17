@@ -147,6 +147,8 @@ export default function CreateVideo({ limits }: { limits: UploadLimits }) {
 
             setStatus('done');
             toast.success('Uploaded. We are checking the video now.');
+            // The upload ran outside Inertia, so a Videos page prefetched meanwhile lacks the new video.
+            router.flushAll();
             router.visit(videosIndex());
         } catch {
             setStatus('failed');
