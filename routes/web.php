@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CaptionTemplateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstagramConnectionController;
 use App\Http\Controllers\LinkedInConnectionController;
@@ -49,6 +50,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('publications/{publication}/retry', PublicationRetryController::class)->name('publications.retry');
     Route::get('posts/calendar', PostCalendarController::class)->name('posts.calendar');
     Route::patch('posts/{post}/schedule', PostScheduleController::class)->name('posts.schedule.update');
+
+    Route::get('caption-templates', [CaptionTemplateController::class, 'index'])->name('caption-templates.index');
+    Route::post('caption-templates', [CaptionTemplateController::class, 'store'])->name('caption-templates.store');
+    Route::put('caption-templates/{captionTemplate}', [CaptionTemplateController::class, 'update'])->name('caption-templates.update');
+    Route::delete('caption-templates/{captionTemplate}', [CaptionTemplateController::class, 'destroy'])
+        ->can('delete', 'captionTemplate')
+        ->name('caption-templates.destroy');
 
     Route::get('social-accounts', [SocialAccountController::class, 'index'])->name('social-accounts.index');
     Route::delete('social-accounts/{socialAccount}', [SocialAccountController::class, 'destroy'])

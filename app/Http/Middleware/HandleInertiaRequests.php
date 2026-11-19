@@ -2,6 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\PublicationStatus;
+use App\Models\SocialAccount;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,7 +45,33 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'accountsNeedingReconnection' => fn (): array => $request->user() ? $this->accountsNeedingReconnection($request->user()) : [],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * The user's accounts that can no longer publish, with the number of scheduled publications that will fail.
+     *
+     * @return array<int, array{id: int, platform: string, display_name: string, scheduled_publications: int}>
+     */
+    private function accountsNeedingReconnection(User $user): array
+    {
+        return $user->socialAccounts()
+            ->oldest()
+            ->withCount(['publications as scheduled_publications_count' => fn (Builder $publications) => $publications
+                ->where('status', PublicationStatus::Pending)
+                ->whereHas('post', fn (Builder $post) => $post->whereNull('dispatched_at')),
+            ])
+            ->get()
+            ->filter(fn (SocialAccount $account): bool => $account->needsReconnection())
+            ->map(fn (SocialAccount $account): array => [
+                'id' => $account->id,
+                'platform' => $account->platform->value,
+                'display_name' => $account->display_name,
+                'scheduled_publications' => (int) $account->getAttribute('scheduled_publications_count'),
+            ])
+            ->values()
+            ->all();
     }
 }

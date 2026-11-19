@@ -8,6 +8,7 @@ use App\Enums\PublicationStatus;
 use App\Enums\VideoStatus;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
+use App\Http\Resources\CaptionTemplateResource;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Models\Publication;
@@ -200,11 +201,12 @@ class PostController extends Controller
                     'platform' => $account->platform,
                     'display_name' => $account->display_name,
                     'avatar_url' => $account->avatar_url,
-                    'needs_reconnection' => $account->reconnection_required_at !== null,
+                    'needs_reconnection' => $account->needsReconnection(),
                     'can_direct_post' => $account->platform === Platform::TikTok
                         && config('services.tiktok.direct_post')
                         && in_array('video.publish', $account->scopes ?? [], true),
                 ]),
+            'captionTemplates' => CaptionTemplateResource::collection($user->captionTemplates()->orderBy('name')->get())->resolve(),
             'platforms' => collect(Platform::cases())->map(fn (Platform $platform): array => $platform->limits()),
             'privacyOptions' => StorePostRequest::PRIVACY_OPTIONS,
         ];

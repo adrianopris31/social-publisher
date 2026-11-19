@@ -24,7 +24,7 @@ class SocialAccountController extends Controller
                 'platform' => $account->platform,
                 'display_name' => $account->display_name,
                 'avatar_url' => $account->avatar_url,
-                'needs_reconnection' => $account->reconnection_required_at !== null,
+                'needs_reconnection' => $account->needsReconnection(),
                 'uses_instagram_login' => $account->usesInstagramLogin(),
                 'connected_at' => $account->created_at?->toIso8601String(),
             ]);

@@ -51,6 +51,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
+     * @return HasMany<CaptionTemplate, $this>
+     */
+    public function captionTemplates(): HasMany
+    {
+        return $this->hasMany(CaptionTemplate::class);
+    }
+
+    /**
      * @return HasMany<SocialAccount, $this>
      */
     public function socialAccounts(): HasMany

@@ -3,6 +3,9 @@ import { AlertTriangle, CalendarClock, Info, Send, Upload } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { AccountAvatar } from '@/components/account-avatar';
+import { CaptionPreview } from '@/components/caption-preview';
+import type { CaptionPreviewItem } from '@/components/caption-preview';
+import { CaptionTemplateMenu } from '@/components/caption-template-menu';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -28,12 +31,13 @@ import { TikTokDirectPostFields } from '@/components/tiktok-direct-post-fields';
 import type { TikTokDirectSettings } from '@/components/tiktok-direct-post-fields';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { appendToCaption, countHashtags } from '@/lib/captions';
 import { cn } from '@/lib/utils';
 import { formatDuration, formatFileSize } from '@/lib/platforms';
 import { create, store, update } from '@/routes/posts';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import { create as createVideo } from '@/routes/videos';
-import type { Platform } from '@/types';
+import type { CaptionTemplate, Platform } from '@/types';
 
 type ComposerVideo = {
     id: number;
@@ -59,6 +63,7 @@ type PlatformLimits = {
     max_duration_ms: number;
     max_file_size_bytes: number | null;
     max_caption_length: number;
+    max_hashtags: number | null;
 };
 
 type PublicationInput = {
@@ -84,6 +89,7 @@ type Props = {
     accounts: ComposerAccount[];
     platforms: PlatformLimits[];
     privacyOptions: string[];
+    captionTemplates: CaptionTemplate[];
     selectedVideoId: number | null;
     /** Set when editing a scheduled post. */
     post: EditablePost | null;
@@ -120,6 +126,15 @@ function newPublication(account: ComposerAccount): PublicationInput {
     };
 }
 
+/** Hashtag sets go on their own line at the end; caption templates become a new paragraph. */
+function insertTemplate(caption: string, template: CaptionTemplate): string {
+    return appendToCaption(
+        caption,
+        template.body,
+        template.type === 'hashtags' ? 'line' : 'paragraph',
+    );
+}
+
 /** The value a datetime-local input expects, in the browser's time zone. */
 function toLocalInputValue(date: Date): string {
     const offsetMs = date.getTimezoneOffset() * 60_000;
@@ -132,6 +147,7 @@ export default function CreatePost({
     accounts,
     platforms,
     privacyOptions,
+    captionTemplates,
     selectedVideoId,
     post,
 }: Props) {
@@ -227,6 +243,35 @@ export default function CreatePost({
         }
     }
 
+    const previewItems = form.data.publications.flatMap(
+        (publication): CaptionPreviewItem[] => {
+            const account = accounts.find(
+                (candidate) => candidate.id === publication.social_account_id,
+            );
+            const isTikTokInbox =
+                account?.platform === 'tiktok' &&
+                publication.settings.mode !== 'direct';
+
+            if (!account || isTikTokInbox) {
+                return [];
+            }
+
+            const limits = limitsByPlatform[account.platform];
+
+            return [
+                {
+                    accountId: account.id,
+                    platform: account.platform,
+                    accountName: account.display_name,
+                    avatarUrl: account.avatar_url,
+                    caption: publication.caption || form.data.caption,
+                    maxCaptionLength: limits.max_caption_length,
+                    maxHashtags: limits.max_hashtags,
+                },
+            ];
+        },
+    );
+
     if (videos.length === 0) {
         return (
             <ComposerShell isEditing={post !== null}>
@@ -316,6 +361,16 @@ export default function CreatePost({
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-2">
+                        <CaptionTemplateMenu
+                            templates={captionTemplates}
+                            currentCaption={form.data.caption}
+                            onInsert={(template) =>
+                                form.setData(
+                                    'caption',
+                                    insertTemplate(form.data.caption, template),
+                                )
+                            }
+                        />
                         <Textarea
                             value={form.data.caption}
                             onChange={(event) =>
@@ -325,7 +380,8 @@ export default function CreatePost({
                             placeholder="Write a caption…"
                         />
                         <p className="text-right text-xs text-muted-foreground">
-                            {form.data.caption.length} characters
+                            {form.data.caption.length} characters ·{' '}
+                            {countHashtags(form.data.caption)} hashtags
                         </p>
                         <InputError message={errors.caption} />
                     </CardContent>
@@ -368,6 +424,7 @@ export default function CreatePost({
                                         '',
                                     )}
                                     privacyOptions={privacyOptions}
+                                    captionTemplates={captionTemplates}
                                     isChecked={selectedIds.has(account.id)}
                                     onToggle={(checked) =>
                                         toggleAccount(account, checked)
@@ -381,6 +438,24 @@ export default function CreatePost({
                         <InputError message={errors.publications} />
                     </CardContent>
                 </Card>
+
+                {form.data.publications.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Caption preview</CardTitle>
+                            <CardDescription>
+                                What each account shows before "… more"
+                                (approximate, it depends on the screen) and the
+                                limits per platform. TikTok inbox uploads are
+                                left out: their caption is written in the TikTok
+                                app.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <CaptionPreview items={previewItems} />
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>
@@ -525,6 +600,7 @@ function AccountOption({
     defaultCaption,
     fallbackTitle,
     privacyOptions,
+    captionTemplates,
     isChecked,
     onToggle,
     onChange,
@@ -540,6 +616,7 @@ function AccountOption({
     defaultCaption: string;
     fallbackTitle: string | undefined;
     privacyOptions: string[];
+    captionTemplates: CaptionTemplate[];
     isChecked: boolean;
     onToggle: (checked: boolean) => void;
     onChange: (changes: Partial<PublicationInput>) => void;
@@ -589,10 +666,13 @@ function AccountOption({
                     </p>
                 </div>
                 {account.needs_reconnection && (
-                    <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                    <Link
+                        href={socialAccountsIndex()}
+                        className="flex items-center gap-1 text-xs text-amber-600 underline-offset-2 hover:underline dark:text-amber-400"
+                    >
                         <AlertTriangle className="size-3.5" />
                         Reconnect needed
-                    </span>
+                    </Link>
                 )}
                 {!account.needs_reconnection && isTooLong && (
                     <span className="text-xs text-muted-foreground">
@@ -766,6 +846,18 @@ function AccountOption({
                                     (optional override)
                                 </span>
                             </Label>
+                            <CaptionTemplateMenu
+                                templates={captionTemplates}
+                                currentCaption={effectiveCaption}
+                                onInsert={(template) =>
+                                    onChange({
+                                        caption: insertTemplate(
+                                            effectiveCaption,
+                                            template,
+                                        ),
+                                    })
+                                }
+                            />
                             <Textarea
                                 id={`${checkboxId}-caption`}
                                 value={publication.caption}

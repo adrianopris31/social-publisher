@@ -21,7 +21,7 @@ class PublicationRetryController extends Controller
         $error = match (true) {
             $publication->status !== PublicationStatus::Failed => __('Only failed publications can be retried.'),
             $publication->socialAccount === null => __('The account was disconnected. Connect it again and create a new post.'),
-            $publication->socialAccount->reconnection_required_at !== null => __('Reconnect :name first.', ['name' => $publication->socialAccount->display_name]),
+            $publication->socialAccount->needsReconnection() => __('Reconnect :name first.', ['name' => $publication->socialAccount->display_name]),
             default => null,
         };
 

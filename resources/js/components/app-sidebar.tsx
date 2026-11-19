@@ -3,6 +3,7 @@ import {
     CalendarDays,
     FileText,
     Film,
+    Hash,
     LayoutGrid,
     Link2,
     Send,
@@ -23,6 +24,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard, privacy, terms } from '@/routes';
+import { index as captionTemplatesIndex } from '@/routes/caption-templates';
 import { index as socialAccountsIndex } from '@/routes/social-accounts';
 import {
     calendar as postsCalendar,
@@ -52,6 +54,11 @@ const mainNavItems: NavItem[] = [
         title: 'Calendar',
         href: postsCalendar(),
         icon: CalendarDays,
+    },
+    {
+        title: 'Templates',
+        href: captionTemplatesIndex(),
+        icon: Hash,
     },
     {
         title: 'Videos',

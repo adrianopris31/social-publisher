@@ -4,6 +4,7 @@ use App\Enums\Platform;
 use App\Enums\PublicationStatus;
 use App\Enums\VideoStatus;
 use App\Jobs\PublishPublication;
+use App\Models\CaptionTemplate;
 use App\Models\Post;
 use App\Models\Publication;
 use App\Models\SocialAccount;
@@ -150,6 +151,26 @@ describe('create', function () {
                 ->has('platforms', count(Platform::cases()))
             );
     });
+
+    test('it offers only the caption templates of the user', function () {
+        $user = User::factory()->create();
+        readyVideo($user);
+        composerAccount($user, Platform::YouTube);
+        $template = CaptionTemplate::factory()->for($user)->hashtags()->create();
+        CaptionTemplate::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('posts.create'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('captionTemplates', 1)
+                ->where('captionTemplates.0', [
+                    'id' => $template->id,
+                    'type' => 'hashtags',
+                    'name' => $template->name,
+                    'body' => $template->body,
+                ])
+            );
+    });
 });
 
 describe('store', function () {
@@ -257,7 +278,20 @@ describe('store', function () {
     })->with([
         'facebook reels are capped at 90 seconds' => [Platform::Facebook, 91_000, '', 'social_account_id', 'Facebook accepts videos up to 90 seconds.'],
         'threads captions are capped at 500 characters' => [Platform::Threads, 30_000, str_repeat('a', 501), 'caption', 'Threads allows at most 500 characters.'],
+        'instagram captions are capped at 30 hashtags' => [Platform::Instagram, 30_000, '#'.implode(' #', range(1, 31)), 'caption', 'Instagram allows at most 30 hashtags.'],
     ]);
+
+    test('it accepts 30 hashtags on instagram', function () {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('posts.store'), [
+                'video_id' => readyVideo($user)->id,
+                'caption' => '#'.implode(' #', range(1, 30)),
+                'publications' => [['social_account_id' => composerAccount($user, Platform::Instagram)->id]],
+            ])
+            ->assertSessionHasNoErrors();
+    });
 
     test('it rejects a video larger than the platform accepts', function (Platform $platform, bool $isRejected) {
         $user = User::factory()->create();
@@ -300,6 +334,18 @@ describe('store', function () {
                 'publications' => [['social_account_id' => $account->id]],
             ])
             ->assertSessionHasErrors(['publications.0.social_account_id' => 'Reconnect My Channel before publishing to it.']);
+    });
+
+    test('it rejects accounts whose token expired without a way to refresh it', function () {
+        $user = User::factory()->create();
+        $account = SocialAccount::factory()->for($user)->forPlatform(Platform::LinkedIn)->expired()->create(['display_name' => 'My Profile', 'refresh_token' => null]);
+
+        $this->actingAs($user)
+            ->post(route('posts.store'), [
+                'video_id' => readyVideo($user)->id,
+                'publications' => [['social_account_id' => $account->id]],
+            ])
+            ->assertSessionHasErrors(['publications.0.social_account_id' => 'Reconnect My Profile before publishing to it.']);
     });
 
     test('it rejects an account that reached its daily limit', function () {

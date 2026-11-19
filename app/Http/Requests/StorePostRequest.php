@@ -151,7 +151,7 @@ class StorePostRequest extends FormRequest
         $platform = $account->platform;
         $field = "publications.{$index}";
 
-        if ($account->reconnection_required_at !== null) {
+        if ($account->needsReconnection()) {
             $validator->errors()->add("{$field}.social_account_id", "Reconnect {$account->display_name} before publishing to it.");
         }
 
@@ -165,6 +165,12 @@ class StorePostRequest extends FormRequest
         // TikTok inbox uploads carry no caption; the creator writes it in the TikTok app.
         if (($platform !== Platform::TikTok || $isTikTokDirect) && mb_strlen($caption) > $platform->maxCaptionLength()) {
             $validator->errors()->add("{$field}.caption", "{$platform->label()} allows at most {$platform->maxCaptionLength()} characters.");
+        }
+
+        $maxHashtags = $platform->maxHashtags();
+
+        if ($maxHashtags !== null && Platform::countHashtags($caption) > $maxHashtags) {
+            $validator->errors()->add("{$field}.caption", "{$platform->label()} allows at most {$maxHashtags} hashtags.");
         }
 
         if (app(PublishingLimits::class)->remaining($account, $this->publishAt() ?? now(), $this->ignoredPostId()) === 0) {

@@ -62,6 +62,28 @@ class SocialAccount extends Model
     }
 
     /**
+     * Whether publishing to this account is blocked until the user connects it again: the platform
+     * revoked access, or the token expired and the platform offers no way to refresh it afterwards.
+     */
+    public function needsReconnection(): bool
+    {
+        if ($this->reconnection_required_at !== null) {
+            return true;
+        }
+
+        if ($this->token_expires_at === null || $this->token_expires_at->isFuture()) {
+            return false;
+        }
+
+        return match ($this->platform) {
+            Platform::Instagram => $this->usesInstagramLogin(),
+            Platform::Threads => true,
+            Platform::LinkedIn => ! $this->refresh_token,
+            Platform::YouTube, Platform::TikTok, Platform::Facebook => false,
+        };
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo

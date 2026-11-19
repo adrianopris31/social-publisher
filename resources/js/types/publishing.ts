@@ -80,3 +80,12 @@ export type Paginator<T> = {
     prev_page_url: string | null;
     next_page_url: string | null;
 };
+
+export type CaptionTemplateType = 'caption' | 'hashtags';
+
+export type CaptionTemplate = {
+    id: number;
+    type: CaptionTemplateType;
+    name: string;
+    body: string;
+};

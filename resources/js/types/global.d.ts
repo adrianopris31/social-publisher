@@ -1,3 +1,4 @@
+import type { Platform } from '@/types';
 import type { Auth } from '@/types/auth';
 
 declare module 'react' {
@@ -12,6 +13,12 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            accountsNeedingReconnection?: {
+                id: number;
+                platform: Platform;
+                display_name: string;
+                scheduled_publications: number;
+            }[];
             [key: string]: unknown;
         };
     }

@@ -63,7 +63,7 @@ enum Platform: string
     /**
      * The limits the upload page and the composer show for the platform.
      *
-     * @return array{value: self, label: string, max_duration_ms: int, max_file_size_bytes: int|null, max_caption_length: int}
+     * @return array{value: self, label: string, max_duration_ms: int, max_file_size_bytes: int|null, max_caption_length: int, max_hashtags: int|null}
      */
     public function limits(): array
     {
@@ -73,6 +73,7 @@ enum Platform: string
             'max_duration_ms' => $this->maxDurationMs(),
             'max_file_size_bytes' => $this->maxFileSizeBytes(),
             'max_caption_length' => $this->maxCaptionLength(),
+            'max_hashtags' => $this->maxHashtags(),
         ];
     }
 
@@ -88,5 +89,24 @@ enum Platform: string
             self::Threads => 500,
             self::LinkedIn => 3_000,
         };
+    }
+
+    /**
+     * Most hashtags the platform accepts in one caption, or null when it rejects no count.
+     */
+    public function maxHashtags(): ?int
+    {
+        return match ($this) {
+            self::Instagram => 30,
+            self::YouTube, self::Facebook, self::TikTok, self::Threads, self::LinkedIn => null,
+        };
+    }
+
+    /**
+     * Count the hashtags in a caption the way the platforms recognise them: "#" followed by letters, digits or "_".
+     */
+    public static function countHashtags(string $caption): int
+    {
+        return (int) preg_match_all('/#[\p{L}\p{N}_]+/u', $caption);
     }
 }
