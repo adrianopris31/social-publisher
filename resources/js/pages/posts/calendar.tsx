@@ -223,7 +223,7 @@ export default function PostsCalendar({ month, posts }: Props) {
                         Where the post goes and how far each platform got.
                     </DialogDescription>
                     {selectedPost && (
-                        <div className="space-y-4 pt-6">
+                        <div className="min-w-0 space-y-4 pt-6">
                             {isScheduledPost(selectedPost) && (
                                 <QuickReschedule
                                     // A new key resets the inputs once the saved time comes back.

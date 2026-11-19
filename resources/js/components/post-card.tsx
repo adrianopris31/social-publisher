@@ -65,7 +65,7 @@ export function PostCard({ post }: { post: Post }) {
                               : null}
                     </p>
                     {post.caption && (
-                        <p className="line-clamp-2 text-sm text-muted-foreground">
+                        <p className="line-clamp-2 text-sm wrap-anywhere text-muted-foreground">
                             {post.caption}
                         </p>
                     )}
@@ -132,7 +132,7 @@ function PublicationRow({
                     <p className="truncate text-sm font-medium">
                         {accountName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="line-clamp-2 text-xs wrap-anywhere text-muted-foreground">
                         {platformNames[publication.platform]}
                         {publication.title && ` · ${publication.title}`}
                     </p>
